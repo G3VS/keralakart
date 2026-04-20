@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Checkout — KeralaKart{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width:900px">
+  <h2 class="section-heading mb-4">Secure <span>Checkout</span></h2>
+  
+  <form method="post" id="checkout-form">
+    {% csrf_token %}
+    <div class="row g-4">
+      
+      <!-- Left column — Address & Payment -->
+      <div class="col-lg-7">
+        
+        <!-- Delivery Address -->
+        <div class="bg-white rounded-3 p-4 mb-3" style="border:1px solid rgba(0,0,0,0.07)">
+          <h6 style="font-weight:600" class="mb-3">&#128230; Delivery Address</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name *</label>
+              <input type="text" name="full_name" class="form-control" required 
+                     value="{{ user.get_full_name }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email *</label>
+              <input type="email" name="email" class="form-control" required 
+                     value="{{ user.email }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone *</label>
+              <input type="tel" name="phone" class="form-control" required 
+                     placeholder="+91 XXXXX XXXXX">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address Line 1 *</label>
+              <input type="text" name="address_line1" class="form-control" required 
+                     placeholder="House No., Street Name">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address Line 2 <span class="text-muted">(optional)</span></label>
+              <input type="text" name="address_line2" class="form-control" 
+                     placeholder="Landmark, Area">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">City *</label>
+              <input type="text" name="city" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">State *</label>
+              <input type="text" name="state" class="form-control" value="Kerala">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Pincode *</label>
+              <input type="text" name="pincode" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Country *</label>
+              <input type="text" name="country" class="form-control" value="India">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Payment Method -->
+        <div class="bg-white rounded-3 p-4" style="border:1px solid rgba(0,0,0,0.07)">
+          <h6 style="font-weight:600" class="mb-3">&#128179; Payment Method</h6>
+          <div class="d-flex flex-column gap-2">
+            
+            <label class="payment-option active-payment" id="label-cod" 
+                   style="display:flex;align-items:center;gap:10px;padding:14px;border:1.5px solid var(--green);border-radius:10px;cursor:pointer">
+              <input type="radio" name="payment_method" value="COD" checked 
+                     onchange="switchPaymentUI('COD')">
+              <div>
+                <div style="font-weight:500;font-size:0.95rem">&#128230; Cash on Delivery</div>
+                <div style="font-size:0.8rem;color:var(--muted)">Pay when you receive the order</div>
+              </div>
+            </label>
+            
+            <label class="payment-option" id="label-razorpay" 
+                   style="display:flex;align-items:center;gap:10px;padding:14px;border:1.5px solid rgba(0,0,0,0.1);border-radius:10px;cursor:pointer">
+              <input type="radio" name="payment_method" value="Razorpay" 
+                     onchange="switchPaymentUI('Razorpay')">
+              <div>
+                <div style="font-weight:500;font-size:0.95rem">&#128179; Pay Online</div>
+                <div style="font-size:0.8rem;color:var(--muted)">UPI, Cards, Net Banking — Instant confirmation</div>
+              </div>
+            </label>
+            
+          </div>
+        </div>
+        
+      </div>
+      
+      <!-- Right column — Order Summary -->
+      <div class="col-lg-5">
+        <div class="bg-white rounded-3 p-4" style="border:1px solid rgba(0,0,0,0.07);position:sticky;top:1rem">
+          <h6 style="font-weight:600" class="mb-3">&#128717; Order Summary</h6>
+          
+          {% for item in items %}
+          <div class="d-flex justify-content-between mb-2" style="font-size:0.88rem">
+            <span>{{ item.product.name|truncatechars:28 }} &times;{{ item.quantity }}</span>
+            <span>&#8377;{{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+          
+          <hr>
+          
+          <div class="d-flex justify-content-between mb-1">
+            <span>Subtotal</span>
+            <span>&#8377;{{ total }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1 text-success">
+            <span>Shipping</span>
+            <span>{% if total >= 999 %}FREE{% else %}&#8377;99{% endif %}</span>
+          </div>
+          
+          <hr>
+          
+          <div class="d-flex justify-content-between mb-3" style="font-weight:600;font-size:1.1rem">
+            <span>Total</span>
+            <span style="color:var(--green)">
+              &#8377;{% if total >= 999 %}{{ total }}{% else %}{{ total|add:99 }}{% endif %}
+            </span>
+          </div>
+          
+          <!-- COD Button (default visible) -->
+          <button type="submit" id="btn-cod" class="btn btn-kerala w-100 btn-lg">
+            Place Order &#127881;
+          </button>
+          
+          <!-- Razorpay Button (hidden by default) -->
+          <button type="button" id="btn-razorpay" class="btn btn-kerala w-100 btn-lg" 
+                  style="display:none" onclick="initiateRazorpayPayment()">
+            <i class="bi bi-credit-card me-2"></i>Pay Now
+          </button>
+          
+          <p class="text-center text-muted mt-2 mb-0" style="font-size:0.78rem">
+            &#128274; 100% Secure Checkout
+          </p>
+        </div>
+      </div>
+      
+    </div>
+  </form>
+</div>
+
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+  // Switch between COD and Razorpay button
+  function switchPaymentUI(method) {
+    const btnCod = document.getElementById('btn-cod');
+    const btnRazorpay = document.getElementById('btn-razorpay');
+    const labelCod = document.getElementById('label-cod');
+    const labelRazorpay = document.getElementById('label-razorpay');
+    
+    if (method === 'COD') {
+      btnCod.style.display = 'block';
+      btnRazorpay.style.display = 'none';
+      labelCod.style.borderColor = 'var(--green)';
+      labelRazorpay.style.borderColor = 'rgba(0,0,0,0.1)';
+    } else {
+      btnCod.style.display = 'none';
+      btnRazorpay.style.display = 'block';
+      labelCod.style.borderColor = 'rgba(0,0,0,0.1)';
+      labelRazorpay.style.borderColor = 'var(--green)';
+    }
+  }
+  
+  // Handle COD form submission (normal behavior)
+  document.getElementById('checkout-form').addEventListener('submit', function(e) {
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    // If Razorpay is selected, prevent normal form submission
+    if (paymentMethod === 'Razorpay') {
+      e.preventDefault();
+      return false;
+    }
+    
+    // COD submission proceeds normally
+  });
+  
+  // Razorpay payment flow
+  async function initiateRazorpayPayment() {
+    const form = document.getElementById('checkout-form');
+    const formData = new FormData(form);
+    
+    // Validate form
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+    
+    try {
+      // Step 1: Create Django order
+      const createResponse = await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      });
+      
+      const orderData = await createResponse.json();
+      
+      if (!orderData.order_id) {
+        alert('Error creating order. Please try again.');
+        return;
+      }
+      
+      // Step 2: Create Razorpay order
+      const razorpayResponse = await fetch("{% url 'create_razorpay_order' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          order_id: orderData.order_id,
+          total: orderData.total
+        })
+      });
+      
+      const razorpayData = await razorpayResponse.json();
+      
+      if (razorpayData.error) {
+        alert('Error: ' + razorpayData.error);
+        return;
+      }
+      
+      // Step 3: Open Razorpay payment window
+      const options = {
+        key: razorpayData.razorpay_key_id,
+        amount: razorpayData.amount,
+        currency: razorpayData.currency,
+        name: 'KeralaKart',
+        description: 'Authentic Kerala Products',
+        image: 'https://via.placeholder.com/100x100.png?text=K',
+        order_id: razorpayData.razorpay_order_id,
+        
+        handler: async function(response) {
+          // Step 4: Verify payment
+          const verifyResponse = await fetch("{% url 'verify_razorpay_payment' %}", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              django_order_id: razorpayData.django_order_id
+            })
+          });
+          
+          const verifyData = await verifyResponse.json();
+          
+          if (verifyData.status === 'success') {
+            // Success — redirect to order detail
+            window.location.href = '/orders/' + verifyData.order_id + '/';
+          } else {
+            alert('Payment verification failed: ' + verifyData.error);
+            window.location.href = "{% url 'payment_failed' %}";
+          }
+        },
+        
+        prefill: {
+          name: formData.get('full_name'),
+          email: formData.get('email'),
+          contact: formData.get('phone')
+        },
+        
+        theme: {
+          color: '#1a6b3c'
+        },
+        
+        modal: {
+          ondismiss: function() {
+            if (confirm('Are you sure you want to cancel the payment?')) {
+              window.location.href = "{% url 'payment_failed' %}";
+            }
+          }
+        }
+      };
+      
+      const rzp = new Razorpay(options);
+      rzp.open();
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('An error occurred. Please try again.');
+    }
+  }
+</script>
+{% endblock %}

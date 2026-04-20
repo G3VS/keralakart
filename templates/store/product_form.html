@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Product — KeralaKart{% endblock %}
+{% block content %}
+<div class="container mt-4" style="max-width:680px">
+  <h2 class="section-heading mb-4">{{ action }} <span>Product</span></h2>
+  <div class="bg-white rounded-3 p-4" style="border:1px solid rgba(0,0,0,0.07)">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Product Name *</label>
+          <input type="text" name="name" class="form-control" required value="{{ product.name|default:'' }}" placeholder="e.g. Idukki Cardamom — Premium Grade A">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Category *</label>
+          <select name="category" class="form-select" required>
+            <option value="">Select category</option>
+            {% for cat in categories %}
+            <option value="{{ cat.pk }}" {% if product and product.category.pk == cat.pk %}selected{% endif %}>
+              {{ cat.icon }} {{ cat.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Origin (District / Region)</label>
+          <input type="text" name="origin" class="form-control" value="{{ product.origin|default:'' }}" placeholder="e.g. Idukki, Wayanad">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Selling Price (₹) *</label>
+          <input type="number" name="price" class="form-control" required step="0.01" value="{{ product.price|default:'' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Original Price (₹)</label>
+          <input type="number" name="original_price" class="form-control" step="0.01" value="{{ product.original_price|default:'' }}" placeholder="Leave blank if no offer">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Stock Quantity *</label>
+          <input type="number" name="stock" class="form-control" required min="0" value="{{ product.stock|default:0 }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Weight / Quantity</label>
+          <input type="text" name="weight" class="form-control" value="{{ product.weight|default:'' }}" placeholder="e.g. 500g, 1kg, 250ml">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Product Image</label>
+          <input type="file" name="image" class="form-control" accept="image/*">
+          {% if product and product.image %}
+          <div class="mt-2">
+            <img src="{{ product.image.url }}" style="height:60px;border-radius:8px" alt="Current image">
+            <small class="text-muted ms-2">Current image</small>
+          </div>
+          {% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label">Description *</label>
+          <textarea name="description" class="form-control" rows="5" required placeholder="Describe your product — origin, quality, how it's made, uses, storage tips...">{{ product.description|default:'' }}</textarea>
+        </div>
+        <div class="col-12 d-flex gap-3">
+          <button type="submit" class="btn btn-kerala btn-lg px-5">{{ action }} Product</button>
+          <a href="{% url 'vendor_dashboard' %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

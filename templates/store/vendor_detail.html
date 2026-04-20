@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ vendor.shop_name }} — KeralaKart{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <!-- Shop banner -->
+  <div class="rounded-3 p-4 mb-4 d-flex align-items-center gap-4" style="background:linear-gradient(135deg,#1a6b3c,#0f4a2a);color:#fff">
+    {% if vendor.logo %}
+    <img src="{{ vendor.logo.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.3)">
+    {% else %}
+    <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:2.5rem;border:3px solid rgba(255,255,255,0.3)">🏪</div>
+    {% endif %}
+    <div>
+      <h2 class="display-font mb-1" style="color:#fff;font-size:1.8rem">{{ vendor.shop_name }}</h2>
+      <p style="color:rgba(255,255,255,0.8);margin:0">📍 {{ vendor.location }}, Kerala &nbsp;·&nbsp; Member since {{ vendor.joined_at|date:"M Y" }}</p>
+      {% if vendor.description %}<p style="color:rgba(255,255,255,0.75);margin-top:6px;font-size:0.9rem">{{ vendor.description }}</p>{% endif %}
+    </div>
+  </div>
+
+  <h4 class="section-heading mb-3">Products by <span>{{ vendor.shop_name }}</span></h4>
+  {% if products %}
+  <div class="row g-3">
+    {% for product in products %}
+    <div class="col-6 col-md-4 col-lg-3">{% include 'partials/product_card.html' %}</div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted">No products listed yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

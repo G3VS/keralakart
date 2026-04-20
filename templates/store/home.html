@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Authentic Kerala Products — Spices, Handicrafts & More{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section style="background: linear-gradient(135deg, #1a6b3c 0%, #0f4a2a 60%, #1c1c1c 100%); color:#fff; padding: 5rem 0 4rem; margin-top: -1rem;">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <p style="color:var(--gold2);font-size:0.9rem;font-weight:500;letter-spacing:1px;text-transform:uppercase">God's Own Country, Delivered to You</p>
+        <h1 class="display-font" style="font-size:3rem;font-weight:700;line-height:1.15;margin-bottom:1rem">
+          Authentic Kerala <br><span style="color:var(--gold2)">Spices, Crafts</span><br> & Culture
+        </h1>
+        <p style="color:rgba(255,255,255,0.75);font-size:1.05rem;margin-bottom:2rem;max-width:480px">
+          From Idukki cardamom to Aranmula mirrors — shop directly from Kerala's artisans and spice traders. Shipped worldwide for NRIs and Kerala lovers everywhere.
+        </p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="{% url 'product_list' %}" class="btn btn-gold btn-lg px-4">Shop Now <i class="bi bi-arrow-right ms-1"></i></a>
+          <a href="{% url 'vendor_register' %}" class="btn btn-outline-light btn-lg px-4">Sell with Us</a>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center mt-4 mt-lg-0">
+        <div style="font-size:8rem;line-height:1">🌿</div>
+        <div class="d-flex justify-content-center gap-4 mt-3" style="font-size:0.85rem;color:rgba(255,255,255,0.7)">
+          <span>🫙 Premium Spices</span>
+          <span>🧵 Handloom</span>
+          <span>🪔 Handicrafts</span>
+          <span>🌱 Ayurveda</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="container mt-5">
+  <h2 class="section-heading mb-1">Shop by <span>Category</span></h2>
+  <p class="section-sub mb-3">Explore Kerala's finest categories</p>
+  <div class="d-flex flex-wrap gap-2">
+    {% for cat in categories %}
+    <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="cat-pill">
+      {{ cat.icon }} {{ cat.name }}
+    </a>
+    {% empty %}
+    <p class="text-muted">No categories yet.</p>
+    {% endfor %}
+    <a href="{% url 'product_list' %}" class="cat-pill">🛍️ All Products</a>
+  </div>
+</section>
+
+<!-- Featured Products -->
+{% if featured %}
+<section class="container mt-5">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h2 class="section-heading mb-0">Featured <span>Products</span></h2>
+      <p class="section-sub">Handpicked by our team</p>
+    </div>
+    <a href="{% url 'product_list' %}" class="btn btn-outline-kerala">View All</a>
+  </div>
+  <div class="row g-3">
+    {% for product in featured %}
+    <div class="col-6 col-md-4 col-lg-3">
+      {% include 'partials/product_card.html' %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Trust badges -->
+<section class="container mt-5">
+  <div class="row g-3">
+    {% for icon, title, sub in badges %}
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 bg-white rounded-3 h-100" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;margin-bottom:8px">{{ icon }}</div>
+        <p class="fw-500 mb-1" style="font-size:0.9rem">{{ title }}</p>
+        <p class="text-muted mb-0" style="font-size:0.8rem">{{ sub }}</p>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 bg-white rounded-3" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;margin-bottom:8px">🚚</div>
+        <p class="fw-500 mb-1" style="font-size:0.9rem">Ships Worldwide</p>
+        <p class="text-muted mb-0" style="font-size:0.8rem">To 50+ countries for NRIs</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 bg-white rounded-3" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;margin-bottom:8px">✅</div>
+        <p class="fw-500 mb-1" style="font-size:0.9rem">100% Authentic</p>
+        <p class="text-muted mb-0" style="font-size:0.8rem">Directly from Kerala artisans</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 bg-white rounded-3" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;margin-bottom:8px">🌿</div>
+        <p class="fw-500 mb-1" style="font-size:0.9rem">Organic & Natural</p>
+        <p class="text-muted mb-0" style="font-size:0.8rem">No artificial additives</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 bg-white rounded-3" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;margin-bottom:8px">🤝</div>
+        <p class="fw-500 mb-1" style="font-size:0.9rem">Support Local</p>
+        <p class="text-muted mb-0" style="font-size:0.8rem">Every purchase helps a family</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Latest Products -->
+{% if latest %}
+<section class="container mt-5">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h2 class="section-heading mb-0">New <span>Arrivals</span></h2>
+      <p class="section-sub">Fresh from Kerala</p>
+    </div>
+    <a href="{% url 'product_list' %}?sort=newest" class="btn btn-outline-kerala">View All</a>
+  </div>
+  <div class="row g-3">
+    {% for product in latest %}
+    <div class="col-6 col-md-4 col-lg-3">
+      {% include 'partials/product_card.html' %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Sellers CTA -->
+<section style="background: linear-gradient(135deg, #c8922a, #e8a93a); padding: 4rem 0; margin-top: 4rem;">
+  <div class="container text-center">
+    <h2 class="display-font" style="color:#fff;font-size:2.2rem;margin-bottom:1rem">Are you a Kerala artisan or trader?</h2>
+    <p style="color:rgba(255,255,255,0.9);font-size:1rem;max-width:550px;margin:0 auto 2rem">
+      List your products on KeralaKart and reach customers across India and 50+ countries. It's free to join.
+    </p>
+    <a href="{% url 'vendor_register' %}" class="btn btn-lg px-5" style="background:#fff;color:var(--green);font-weight:600;border-radius:10px">
+      Start Selling Today <i class="bi bi-arrow-right ms-2"></i>
+    </a>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Become a Seller — KeralaKart{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width:600px">
+  
+  <div class="text-center mb-4">
+    <div style="font-size:3rem">🏪</div>
+    <h2 class="section-heading">Start Selling on <span>KeralaKart</span></h2>
+    <p class="text-muted">Register your shop and reach buyers across India and worldwide</p>
+  </div>
+
+  <div class="bg-white rounded-3 p-4" style="border:1px solid rgba(0,0,0,0.07)">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="mb-3">
+        <label class="form-label">Shop Name *</label>
+        <input type="text" name="shop_name" class="form-control" required placeholder="e.g. Wayanad Spice Garden">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">District / Location in Kerala *</label>
+        <select name="location" class="form-select" required>
+          <option value="">Select district</option>
+          {% for d in districts %}
+            <option value="{{ d }}">{{ d }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Choose the district where your business is based.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" name="phone" class="form-control" placeholder="+91 XXXXX XXXXX">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Shop Description</label>
+        <textarea name="description" class="form-control" rows="4" placeholder="Tell buyers about your shop, what you sell, your story..."></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Shop Logo (Optional)</label>
+        <input type="file" name="logo" class="form-control" accept="image/*">
+      </div>
+
+      <button type="submit" class="btn btn-kerala w-100 btn-lg">Register My Shop 🌿</button>
+    </form>
+  </div>
+
+  <div class="row g-3 mt-3">
+    <div class="col-4 text-center">
+      <div style="font-size:1.5rem">✅</div>
+      <p style="font-size:0.8rem;color:var(--muted)">Free to register</p>
+    </div>
+    <div class="col-4 text-center">
+      <div style="font-size:1.5rem">🚀</div>
+      <p style="font-size:0.8rem;color:var(--muted)">Quick approval</p>
+    </div>
+    <div class="col-4 text-center">
+      <div style="font-size:1.5rem">🌍</div>
+      <p style="font-size:0.8rem;color:var(--muted)">Global reach</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Seller Dashboard — KeralaKart{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="section-heading mb-0">🏪 {{ vendor.shop_name }}</h2>
+      <span class="badge mt-1 {% if vendor.status == 'approved' %}bg-success{% elif vendor.status == 'pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+        {{ vendor.get_status_display }}
+      </span>
+    </div>
+    {% if vendor.status == 'approved' %}
+    <a href="{% url 'product_add' %}" class="btn btn-kerala"><i class="bi bi-plus-lg me-1"></i>Add Product</a>
+    {% endif %}
+  </div>
+
+  {% if vendor.status == 'pending' %}
+  <div class="alert alert-warning">⏳ Your shop is awaiting admin approval. You'll be able to list products once approved.</div>
+  {% endif %}
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="bg-white rounded-3 p-4 text-center" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;color:var(--green);font-weight:700">{{ products.count }}</div>
+        <div class="text-muted" style="font-size:0.85rem">Total Products</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="bg-white rounded-3 p-4 text-center" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;color:var(--green);font-weight:700">{{ sales }}</div>
+        <div class="text-muted" style="font-size:0.85rem">Items Sold</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="bg-white rounded-3 p-4 text-center" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;color:var(--green);font-weight:700">₹{{ revenue }}</div>
+        <div class="text-muted" style="font-size:0.85rem">Total Revenue</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="bg-white rounded-3 p-4 text-center" style="border:1px solid rgba(0,0,0,0.07)">
+        <div style="font-size:2rem;color:var(--green);font-weight:700">{{ orders.count }}</div>
+        <div class="text-muted" style="font-size:0.85rem">Recent Orders</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products table -->
+  <div class="bg-white rounded-3 p-4 mb-4" style="border:1px solid rgba(0,0,0,0.07)">
+    <h5 class="fw-600 mb-3">Your Products</h5>
+    {% if products %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle" style="font-size:0.9rem">
+        <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                {% if p.image %}<img src="{{ p.image.url }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px">
+                {% else %}<div style="width:40px;height:40px;background:#e8f5ec;border-radius:8px;display:flex;align-items:center;justify-content:center">{{ p.category.icon|default:"🌿" }}</div>{% endif %}
+                <span class="fw-500">{{ p.name|truncatechars:30 }}</span>
+              </div>
+            </td>
+            <td>{{ p.category.name|default:"—" }}</td>
+            <td>₹{{ p.price }}</td>
+            <td><span class="badge {% if p.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">{{ p.stock }}</span></td>
+            <td><span class="badge {% if p.is_active %}bg-success{% else %}bg-secondary{% endif %}">{% if p.is_active %}Active{% else %}Hidden{% endif %}</span></td>
+            <td>
+              <div class="d-flex gap-2">
+                <a href="{% url 'product_edit' p.pk %}" class="btn btn-sm btn-outline-kerala">Edit</a>
+                <form method="post" action="{% url 'product_delete' p.pk %}" onsubmit="return confirm('Delete {{ p.name }}?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No products yet. <a href="{% url 'product_add' %}" style="color:var(--green)">Add your first product →</a></p>
+    {% endif %}
+  </div>
+
+  <!-- Recent orders -->
+  <div class="bg-white rounded-3 p-4" style="border:1px solid rgba(0,0,0,0.07)">
+    <h5 class="fw-600 mb-3">Recent Orders</h5>
+    {% if orders %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle" style="font-size:0.9rem">
+        <thead><tr><th>Order #</th><th>Product</th><th>Qty</th><th>Amount</th><th>Status</th><th>Update</th></tr></thead>
+        <tbody>
+          {% for item in orders %}
+          <tr>
+            <td>#{{ item.order.pk }}</td>
+            <td>{{ item.product.name|truncatechars:25 }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.subtotal }}</td>
+            <td><span class="badge status-{{ item.order.status }}">{{ item.order.get_status_display }}</span></td>
+            <td>
+              <form method="post" action="{% url 'update_order_status' item.pk %}" class="d-flex gap-1">
+                {% csrf_token %}
+                <select name="status" class="form-select form-select-sm" style="width:120px">
+                  <option value="pending" {% if item.order.status == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="confirmed" {% if item.order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                  <option value="shipped" {% if item.order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                  <option value="delivered" {% if item.order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-kerala">✓</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No orders yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

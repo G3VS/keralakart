@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Register — KeralaKart{% endblock %}
+{% block content %}
+<div class="container mt-5" style="max-width:480px">
+  <div class="text-center mb-4">
+    <div style="font-size:2.5rem">🌿</div>
+    <h2 class="section-heading">Join <span>KeralaKart</span></h2>
+    <p class="text-muted">Create your account — it's free!</p>
+  </div>
+  <div class="bg-white rounded-3 p-4" style="border:1px solid rgba(0,0,0,0.07)">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Username *</label>
+        <input type="text" name="username" class="form-control" required placeholder="Choose a username">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email *</label>
+        <input type="email" name="email" class="form-control" required placeholder="your@email.com">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password *</label>
+        <input type="password" name="password1" class="form-control" required placeholder="At least 8 characters">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Confirm Password *</label>
+        <input type="password" name="password2" class="form-control" required placeholder="Repeat password">
+      </div>
+      <div class="mb-4">
+        <label class="form-label">I want to</label>
+        <div class="d-flex gap-3">
+          <label class="flex-fill p-3 rounded-3 text-center" style="border:1.5px solid var(--green);cursor:pointer;background:#f0faf4">
+            <input type="radio" name="role" value="buyer" checked class="d-none">
+            <div style="font-size:1.5rem">🛍️</div>
+            <div style="font-size:0.85rem;font-weight:500;color:var(--green)">Buy Products</div>
+          </label>
+          <label class="flex-fill p-3 rounded-3 text-center" style="border:1.5px solid rgba(0,0,0,0.1);cursor:pointer" id="seller-label">
+            <input type="radio" name="role" value="vendor" class="d-none">
+            <div style="font-size:1.5rem">🏪</div>
+            <div style="font-size:0.85rem;font-weight:500">Sell Products</div>
+          </label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-kerala w-100 btn-lg">Create Account</button>
+    </form>
+    <p class="text-center mt-3 mb-0" style="font-size:0.9rem">
+      Already have an account? <a href="{% url 'login' %}" style="color:var(--green);font-weight:500">Sign in</a>
+    </p>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('input[name="role"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('label.flex-fill').forEach(l => {
+        l.style.borderColor = 'rgba(0,0,0,0.1)';
+        l.style.background = '';
+        l.querySelector('div:last-child').style.color = '';
+      });
+      const parent = radio.closest('label');
+      parent.style.borderColor = 'var(--green)';
+      parent.style.background = '#f0faf4';
+      parent.querySelector('div:last-child').style.color = 'var(--green)';
+    });
+  });
+</script>
+{% endblock %}
+Templates->partial-> produc_card.html
+<div class="product-card">
+  <a href="{% url 'product_detail' product.slug %}" style="text-decoration:none;color:inherit">
+    {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+    {% else %}
+      <div class="no-img">{{ product.category.icon|default:"🌿" }}</div>
+    {% endif %}
+    <div class="card-body">
+      <div class="product-name">{{ product.name }}</div>
+      <div class="vendor-name">by {{ product.vendor.shop_name }} · {{ product.vendor.location }}</div>
+      {% if product.origin %}<div style="font-size:0.75rem;color:#9ca3af;margin-bottom:4px">📍 {{ product.origin }}</div>{% endif %}
+      <div class="d-flex align-items-center gap-1 mb-1">
+        <span class="stars" style="font-size:0.75rem">
+          {% with r=product.avg_rating %}
+          {% if r >= 1 %}⭐{% endif %}{% if r >= 2 %}⭐{% endif %}{% if r >= 3 %}⭐{% endif %}{% if r >= 4 %}⭐{% endif %}{% if r >= 5 %}⭐{% endif %}
+          {% endwith %}
+        </span>
+        <span style="font-size:0.75rem;color:var(--muted)">({{ product.reviews.count }})</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 mt-1">
+        <span class="price">₹{{ product.price }}</span>
+        {% if product.original_price %}
+          <span class="original-price">₹{{ product.original_price }}</span>
+          <span class="discount-badge">{{ product.discount_percent }}% off</span>
+        {% endif %}
+      </div>
+      {% if product.weight %}<div style="font-size:0.75rem;color:var(--muted);margin-top:3px">{{ product.weight }}</div>{% endif %}
+    </div>
+  </a>
+  <div class="px-3 pb-3">
+    <form method="post" action="{% url 'add_to_cart' product.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-kerala w-100" style="font-size:0.85rem;padding:7px">
+        <i class="bi bi-bag-plus me-1"></i> Add to Cart
+      </button>
+    </form>
+  </div>
+</div>

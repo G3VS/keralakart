@@ -1,0 +1,109 @@
+<div class="product-card">
+
+  <!-- Image -->
+  <a href="{% url 'product_detail' product.slug %}" style="text-decoration:none;color:inherit">
+    {% if product.image %}
+      <img src="{{ product.image.url }}"
+           alt="{{ product.name }}"
+           loading="lazy">
+    {% else %}
+      <div class="no-img">
+        {{ product.category.icon|default:"🌿" }}
+      </div>
+    {% endif %}
+  </a>
+
+  <!-- Info -->
+  <div class="card-body">
+
+    <!-- Category badge -->
+    {% if product.category %}
+    <div style="font-size:0.72rem;color:var(--green);font-weight:500;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">
+      {{ product.category.icon }} {{ product.category.name }}
+    </div>
+    {% endif %}
+
+    <!-- Product name -->
+    <a href="{% url 'product_detail' product.slug %}" style="text-decoration:none;color:inherit">
+      <div class="product-name">{{ product.name }}</div>
+    </a>
+
+    <!-- Vendor -->
+    <a href="{% url 'vendor_detail' product.vendor.slug %}" style="text-decoration:none">
+      <div class="vendor-name">
+        🏪 {{ product.vendor.shop_name }} &middot; {{ product.vendor.location }}
+      </div>
+    </a>
+
+    <!-- Origin -->
+    {% if product.origin %}
+    <div style="font-size:0.75rem;color:#9ca3af;margin-bottom:4px">
+      &#128205; {{ product.origin }}
+    </div>
+    {% endif %}
+
+    <!-- Star rating -->
+    <div class="d-flex align-items-center gap-1 mb-2">
+      {% with r=product.avg_rating %}
+        {% if r >= 1 %}<span style="color:#c8922a;font-size:0.75rem">&#9733;</span>{% endif %}
+        {% if r >= 2 %}<span style="color:#c8922a;font-size:0.75rem">&#9733;</span>{% endif %}
+        {% if r >= 3 %}<span style="color:#c8922a;font-size:0.75rem">&#9733;</span>{% endif %}
+        {% if r >= 4 %}<span style="color:#c8922a;font-size:0.75rem">&#9733;</span>{% endif %}
+        {% if r >= 5 %}<span style="color:#c8922a;font-size:0.75rem">&#9733;</span>{% endif %}
+        {% if r == 0 %}
+          <span style="color:#d1d5db;font-size:0.75rem">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+        {% endif %}
+      {% endwith %}
+      <span style="font-size:0.75rem;color:var(--muted)">
+        ({{ product.reviews.count }})
+      </span>
+    </div>
+
+    <!-- Price -->
+    <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+      <span class="price">&#8377;{{ product.price }}</span>
+      {% if product.original_price %}
+        <span class="original-price">&#8377;{{ product.original_price }}</span>
+        <span class="discount-badge">{{ product.discount_percent }}% off</span>
+      {% endif %}
+    </div>
+
+    <!-- Weight -->
+    {% if product.weight %}
+    <div style="font-size:0.75rem;color:var(--muted);margin-top:3px">
+      &#9878; {{ product.weight }}
+    </div>
+    {% endif %}
+
+    <!-- Stock warning -->
+    {% if product.stock == 0 %}
+    <div style="font-size:0.75rem;color:#ef4444;margin-top:4px;font-weight:500">
+      Out of stock
+    </div>
+    {% elif product.stock <= 5 %}
+    <div style="font-size:0.75rem;color:#f97316;margin-top:4px;font-weight:500">
+      Only {{ product.stock }} left!
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Add to cart button -->
+  <div class="px-3 pb-3">
+    {% if product.stock > 0 %}
+      <form method="post" action="{% url 'add_to_cart' product.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-kerala w-100" style="font-size:0.85rem;padding:7px">
+          <i class="bi bi-bag-plus me-1"></i> Add to Cart
+        </button>
+      </form>
+    {% else %}
+      <button class="btn w-100 disabled"
+              style="font-size:0.85rem;padding:7px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:8px"
+              disabled>
+        Out of Stock
+      </button>
+    {% endif %}
+  </div>
+
+</div>
