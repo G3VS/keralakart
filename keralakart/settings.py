@@ -58,7 +58,7 @@ DATABASES = {
     'default': dj_database_url.config(
         # 1. On Render: It uses the live PostgreSQL URL
         # 2. On your Laptop: Replace the details below with your local Postgres credentials
-        default=os.environ.get('DATABASE_URL', 'postgres://postgres:Gayatri@2004@localhost:5432/keralakart')
+        default=os.environ.get('DATABASE_URL', 'postgres://postgres:Gayatri@2004@localhost:5432/postgres')
     )
 }
 
