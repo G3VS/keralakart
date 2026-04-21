@@ -1,4 +1,3 @@
-# create_admin.py
 import os
 import django
 
@@ -7,13 +6,15 @@ django.setup()
 
 from django.contrib.auth.models import User
 
-# Replace these with the details you want
+# Use simple details for now to test
 username = 'admin'
-email = 'admin@keralakart.com'
-password = 'Admin@keralakart2004'
+password = 'TestPassword123!' 
 
-if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username, email, password)
-    print(f"Superuser '{username}' created successfully!")
+user = User.objects.filter(username=username).first()
+if user:
+    user.set_password(password)
+    user.save()
+    print(f"✅ Password updated for '{username}'")
 else:
-    print(f"Superuser '{username}' already exists.")
+    User.objects.create_superuser(username, 'admin@example.com', password)
+    print(f"✅ Superuser '{username}' created fresh")
