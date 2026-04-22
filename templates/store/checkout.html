@@ -180,7 +180,7 @@
     
     // COD submission proceeds normally
   });
-  
+  const CSRF_TOKEN = "{{ csrf_token }}"; 
   async function initiateRazorpayPayment() {
     const form = document.getElementById('checkout-form');
 
