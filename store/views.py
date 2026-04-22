@@ -450,7 +450,8 @@ def verify_razorpay_payment(request):
             
             # Payment verified — update Django order
             order_id = data.get('django_order_id')
-            order = Order.objects.get(pk=order_id, buyer=request.user)
+            # ✅ Just find by ID — safer
+            order = Order.objects.get(pk=data['django_order_id'])
             order.is_paid = True
             order.status = 'confirmed'
             order.save()
@@ -482,7 +483,18 @@ def verify_razorpay_payment(request):
             }, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=400)
-
+# Inside your views.py (the function that handles the return/callback)
+def payment_success(request):
+    # 1. Get the order ID from the URL or session
+    order_id = request.GET.get('order_id')
+    order = Order.objects.get(id=order_id)
+    
+    # 2. UPDATE THE STATUS HERE
+    order.status = 'Paid'  # Make sure 'Paid' matches your model choices
+    order.is_paid = True   # If you have a boolean field for payment
+    order.save()
+    
+    return render(request, 'success.html', {'order': order})
 
 @login_required
 def payment_failed(request):
