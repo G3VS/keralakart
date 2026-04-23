@@ -41,32 +41,33 @@ else:
     print('  Admin already exists — skipping')
 
 # ── Vendor ────────────────────────────────────────────────
-if not User.objects.filter(username='vendor1').exists():
-    u = User.objects.create_user(
-        'vendor1', 'vendor1@example.com', 'vendor123'
-    )
-    vendor = Vendor.objects.create(
-        user=u,
-        shop_name='Wayanad Spice Garden',
-        location='Wayanad',
-        description='Premium spices directly from our farm in Wayanad.',
-        status='approved',
-    )
-    print('  Created vendor: vendor1 / vendor123')
+u, user_created = User.objects.get_or_create(
+    username='vendor1',
+    defaults={
+        'email': 'vendor1@example.com',
+    }
+)
+if user_created:
+    u.set_password('vendor123')
+    u.save()
+    print('  Created vendor user: vendor1')
 else:
-    u = User.objects.get(username='vendor1')
-    if Vendor.objects.filter(user=u).exists():
-        vendor = Vendor.objects.get(user=u)
-        print('  Vendor already exists — skipping')
-    else:
-        vendor = Vendor.objects.create(
-            user=u,
-            shop_name='Wayanad Spice Garden',
-            location='Wayanad',
-            description='Premium spices directly from our farm in Wayanad.',
-            status='approved',
-        )
-        print('  Vendor object recreated for existing user')
+    print('  Vendor user already exists — skipping')
+
+vendor, vendor_created = Vendor.objects.get_or_create(
+    slug='wayanad-spice-garden',
+    defaults={
+        'user':        u,
+        'shop_name':   'Wayanad Spice Garden',
+        'location':    'Wayanad',
+        'description': 'Premium spices directly from our farm in Wayanad.',
+        'status':      'approved',
+    }
+)
+if vendor_created:
+    print('  Created vendor: Wayanad Spice Garden')
+else:
+    print('  Vendor already exists — skipping')
 
 # ── Products — only if none exist ─────────────────────────
 if Product.objects.filter(vendor=vendor).count() == 0:
