@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 from decouple import config
 import dj_database_url
+import cloudinary
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -93,7 +94,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # ── Cloudinary ────────────────────────────────────────────
-import cloudinary
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),

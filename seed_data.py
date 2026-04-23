@@ -31,7 +31,7 @@ for name, slug, icon in categories_data:
     else:
         print(f'  Category exists: {name}')
 
-# ── Admin user ────────────────────────────────────────────
+# ── Admin ─────────────────────────────────────────────────
 if not User.objects.filter(username='admin').exists():
     User.objects.create_superuser(
         'admin', 'admin@keralakart.com', 'admin123'
@@ -54,10 +54,21 @@ if not User.objects.filter(username='vendor1').exists():
     )
     print('  Created vendor: vendor1 / vendor123')
 else:
-    vendor = Vendor.objects.get(user__username='vendor1')
-    print('  Vendor already exists — skipping')
+    u = User.objects.get(username='vendor1')
+    if Vendor.objects.filter(user=u).exists():
+        vendor = Vendor.objects.get(user=u)
+        print('  Vendor already exists — skipping')
+    else:
+        vendor = Vendor.objects.create(
+            user=u,
+            shop_name='Wayanad Spice Garden',
+            location='Wayanad',
+            description='Premium spices directly from our farm in Wayanad.',
+            status='approved',
+        )
+        print('  Vendor object recreated for existing user')
 
-# ── Products — only if none exist yet ─────────────────────
+# ── Products — only if none exist ─────────────────────────
 if Product.objects.filter(vendor=vendor).count() == 0:
     print('  No products found — creating sample products...')
 
@@ -134,6 +145,6 @@ if Product.objects.filter(vendor=vendor).count() == 0:
 
 else:
     count = Product.objects.filter(vendor=vendor).count()
-    print(f'  {count} products already exist — skipping to preserve images ✅')
+    print(f'  {count} products already exist — skipping to preserve images')
 
 print('\nSeeding complete!')
