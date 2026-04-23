@@ -3,6 +3,9 @@ import os
 from decouple import config
 import dj_database_url
 import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from cloudinary.utils import cloudinary_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -92,8 +95,14 @@ LOGOUT_REDIRECT_URL = '/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
 # ── Cloudinary ────────────────────────────────────────────
+
+cloudinary.config(
+    cloud_name = config('CLOUDINARY_CLOUD_NAME', default=''),
+    api_key    = config('CLOUDINARY_API_KEY',    default=''),
+    api_secret = config('CLOUDINARY_API_SECRET', default=''),
+    secure     = True
+)
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
@@ -101,13 +110,7 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
 }
 
-cloudinary.config(
-    cloud_name = config('CLOUDINARY_CLOUD_NAME', default=''),
-    api_key    = config('CLOUDINARY_API_KEY',    default=''),
-    api_secret = config('CLOUDINARY_API_SECRET', default=''),
-)
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DEFAULT_FILE_STORAGE = 'keralakart.storage_backends.CloudinaryStorage'
 
 # ── Razorpay ──────────────────────────────────────────────
 RAZORPAY_KEY_ID     = config('RAZORPAY_KEY_ID',     default='')
