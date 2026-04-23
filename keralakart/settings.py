@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 from decouple import config
 import dj_database_url
-import cloudinary
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -89,11 +88,18 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID')
-RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET')
-
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+# ── Cloudinary ────────────────────────────────────────────
+import cloudinary
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
+    'API_KEY':    config('CLOUDINARY_API_KEY',    default=''),
+    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
+}
 
 cloudinary.config(
     cloud_name = config('CLOUDINARY_CLOUD_NAME', default=''),
@@ -102,3 +108,7 @@ cloudinary.config(
 )
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# ── Razorpay ──────────────────────────────────────────────
+RAZORPAY_KEY_ID     = config('RAZORPAY_KEY_ID',     default='')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
