@@ -380,12 +380,6 @@ def update_order_status(request, pk):
         item.order.save()
         messages.success(request, 'Order status updated.')
     return redirect('vendor_dashboard')
-import razorpay
-import json
-from django.conf import settings
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
 
 @login_required
 def create_razorpay_order(request):
