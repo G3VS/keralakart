@@ -150,7 +150,7 @@
                   &#128179; Pay Online
                 </div>
                 <div style="font-size:0.8rem;color:var(--muted)">
-                  Credit Card / Debit Card — Visa, Mastercard
+                  Credit Card / Debit Card / Wallets
                 </div>
               </div>
             </label>
@@ -172,7 +172,10 @@
           {% for item in items %}
           <div class="d-flex justify-content-between mb-2"
                style="font-size:0.88rem">
-            <span>{{ item.product.name|truncatechars:26 }} &times;{{ item.quantity }}</span>
+            <span>
+              {{ item.product.name|truncatechars:26 }}
+              &times;{{ item.quantity }}
+            </span>
             <span>&#8377;{{ item.subtotal }}</span>
           </div>
           {% endfor %}
@@ -209,14 +212,14 @@
             </span>
           </div>
 
-          <!-- COD button — shown by default -->
+          <!-- COD button shown by default -->
           <button type="submit"
                   id="btn-cod"
                   class="btn btn-kerala w-100 btn-lg">
             Place Order &#127881;
           </button>
 
-          <!-- Razorpay button — hidden by default -->
+          <!-- Razorpay button hidden by default -->
           <button type="button"
                   id="btn-razorpay"
                   class="btn btn-kerala w-100 btn-lg"
@@ -251,13 +254,13 @@
     var labelRazorpay = document.getElementById('label-razorpay');
 
     if (method === 'COD') {
-      btnCod.style.display        = 'block';
-      btnRazorpay.style.display   = 'none';
+      btnCod.style.display            = 'block';
+      btnRazorpay.style.display       = 'none';
       labelCod.style.borderColor      = 'var(--green)';
       labelRazorpay.style.borderColor = 'rgba(0,0,0,0.1)';
     } else {
-      btnCod.style.display        = 'none';
-      btnRazorpay.style.display   = 'block';
+      btnCod.style.display            = 'none';
+      btnRazorpay.style.display       = 'block';
       labelCod.style.borderColor      = 'rgba(0,0,0,0.1)';
       labelRazorpay.style.borderColor = 'var(--green)';
     }
@@ -265,13 +268,15 @@
 
   // Prevent normal form submit when Razorpay is selected
   document.getElementById('checkout-form').addEventListener('submit', function(e) {
-    var method = document.querySelector('input[name="payment_method"]:checked').value;
+    var method = document.querySelector(
+      'input[name="payment_method"]:checked'
+    ).value;
     if (method === 'Razorpay') {
       e.preventDefault();
     }
   });
 
-  // Full Razorpay flow
+  // Full Razorpay payment flow
   function initiateRazorpayPayment() {
     var form = document.getElementById('checkout-form');
 
@@ -282,13 +287,13 @@
     }
 
     // Disable button to prevent double clicks
-    var btn = document.getElementById('btn-razorpay');
-    btn.disabled   = true;
-    btn.innerHTML  = '&#9203; Processing...';
+    var btn       = document.getElementById('btn-razorpay');
+    btn.disabled  = true;
+    btn.innerHTML = '&#9203; Processing...';
 
     var formData = new FormData(form);
 
-    // Step 1 — Create Django order
+    // ── Step 1: Create Django order ────────────────────────────
     fetch("{% url 'checkout' %}", {
       method:  'POST',
       headers: { 'X-CSRFToken': CSRF_TOKEN },
@@ -297,16 +302,16 @@
     .then(function(response) {
       var contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server error — not JSON response');
+        throw new Error('Server error. Please try again.');
       }
       return response.json();
     })
     .then(function(orderData) {
       if (!orderData.order_id) {
-        throw new Error(orderData.error || 'Could not create order');
+        throw new Error(orderData.error || 'Could not create order.');
       }
 
-      // Step 2 — Create Razorpay order
+      // ── Step 2: Create Razorpay order ──────────────────────
       return fetch("{% url 'create_razorpay_order' %}", {
         method:  'POST',
         headers: {
@@ -320,11 +325,12 @@
       })
       .then(function(r) { return r.json(); })
       .then(function(razorpayData) {
+
         if (razorpayData.error) {
           throw new Error(razorpayData.error);
         }
 
-        // Step 3 — Open Razorpay popup
+        // ── Step 3: Open Razorpay popup ────────────────────
         var options = {
           key:         razorpayData.razorpay_key_id,
           amount:      razorpayData.amount,
@@ -333,7 +339,7 @@
           description: 'Authentic Kerala Products',
           order_id:    razorpayData.razorpay_order_id,
 
-          // Only show card payments
+          // Cards + Wallets only — no netbanking or pay later
           config: {
             display: {
               blocks: {
@@ -342,42 +348,53 @@
                   instruments: [
                     { method: 'card' }
                   ]
+                },
+                wallet: {
+                  name: 'Pay by Wallet',
+                  instruments: [
+                    {
+                      method:  'wallet',
+                      wallets: [
+                        'paytm',
+                        'mobikwik',
+                        'freecharge',
+                        'airtel'
+                      ]
+                    }
+                  ]
                 }
               },
-              sequence: ['block.card'],
+              sequence: [
+                'block.card',
+                'block.wallet'
+              ],
               preferences: {
                 show_default_blocks: false
               }
             }
           },
 
-          // Step 4 — After payment succeeds
+          // ── Step 4: After payment succeeds ───────────────
           handler: function(response) {
 
             // Show loading overlay
-            var overlay = document.createElement('div');
-            overlay.id  = 'pay-overlay';
-            overlay.style.cssText = [
-              'position:fixed',
-              'top:0',
-              'left:0',
-              'width:100%',
-              'height:100%',
-              'background:rgba(255,255,255,0.95)',
-              'display:flex',
-              'flex-direction:column',
-              'align-items:center',
-              'justify-content:center',
-              'z-index:9999',
-            ].join(';');
-            overlay.innerHTML = [
-              '<div style="font-size:3rem">&#9989;</div>',
-              '<div style="font-size:1.1rem;font-weight:500;color:#1a6b3c;margin-top:12px">Payment successful!</div>',
-              '<div style="font-size:0.9rem;color:#6b7280;margin-top:6px">Confirming your order...</div>',
-            ].join('');
+            var overlay           = document.createElement('div');
+            overlay.id            = 'pay-overlay';
+            overlay.style.cssText =
+              'position:fixed;top:0;left:0;width:100%;height:100%;' +
+              'background:rgba(255,255,255,0.95);display:flex;'      +
+              'flex-direction:column;align-items:center;'            +
+              'justify-content:center;z-index:9999';
+            overlay.innerHTML =
+              '<div style="font-size:3rem">&#9989;</div>'  +
+              '<div style="font-size:1.1rem;font-weight:500;' +
+              'color:#1a6b3c;margin-top:12px">'            +
+              'Payment successful!</div>'                  +
+              '<div style="font-size:0.9rem;color:#6b7280;' +
+              'margin-top:6px">Confirming your order...</div>';
             document.body.appendChild(overlay);
 
-            // Step 5 — Verify payment with backend
+            // ── Step 5: Verify payment ──────────────────────
             fetch("{% url 'verify_razorpay_payment' %}", {
               method:  'POST',
               headers: {
@@ -394,26 +411,36 @@
             .then(function(r) { return r.json(); })
             .then(function(verifyData) {
               if (verifyData.status === 'success') {
-                // Redirect to order page
-                window.location.href = '/orders/' + verifyData.order_id + '/';
+                // Redirect to order confirmation page
+                window.location.href =
+                  '/orders/' + verifyData.order_id + '/';
               } else {
                 document.getElementById('pay-overlay').remove();
-                alert('Verification failed: ' + (verifyData.error || 'Please contact support'));
+                alert(
+                  'Verification failed: ' +
+                  (verifyData.error || 'Please contact support')
+                );
                 window.location.href = "{% url 'payment_failed' %}";
               }
             })
             .catch(function(err) {
               console.error('Verify error:', err);
               document.getElementById('pay-overlay').remove();
-              alert('Verification error. Check your orders page.');
+              alert('Verification error. Please check your orders page.');
               window.location.href = "{% url 'my_orders' %}";
             });
           },
 
           prefill: {
-            name:    document.querySelector('input[name="full_name"]').value,
-            email:   document.querySelector('input[name="email"]').value,
-            contact: document.querySelector('input[name="phone"]').value,
+            name: document.querySelector(
+              'input[name="full_name"]'
+            ).value,
+            email: document.querySelector(
+              'input[name="email"]'
+            ).value,
+            contact: document.querySelector(
+              'input[name="phone"]'
+            ).value,
           },
 
           theme: {
