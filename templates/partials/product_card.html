@@ -1,7 +1,8 @@
-<div class="product-card">
+<div class="product-card" style="display:flex;flex-direction:column;height:100%">
 
   <!-- Image -->
-  <a href="{% url 'product_detail' product.slug %}" style="text-decoration:none;color:inherit">
+  <a href="{% url 'product_detail' product.slug %}"
+     style="text-decoration:none;color:inherit">
     {% if product.image %}
       <img src="{{ product.image.url }}"
            alt="{{ product.name }}"
@@ -13,25 +14,28 @@
     {% endif %}
   </a>
 
-  <!-- Info -->
-  <div class="card-body">
+  <!-- Info — flex-grow pushes button to bottom -->
+  <div class="card-body" style="flex:1;display:flex;flex-direction:column">
 
     <!-- Category badge -->
     {% if product.category %}
-    <div style="font-size:0.72rem;color:var(--green);font-weight:500;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">
+    <div style="font-size:0.72rem;color:var(--green);font-weight:500;
+                margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">
       {{ product.category.icon }} {{ product.category.name }}
     </div>
     {% endif %}
 
     <!-- Product name -->
-    <a href="{% url 'product_detail' product.slug %}" style="text-decoration:none;color:inherit">
+    <a href="{% url 'product_detail' product.slug %}"
+       style="text-decoration:none;color:inherit">
       <div class="product-name">{{ product.name }}</div>
     </a>
 
     <!-- Vendor -->
-    <a href="{% url 'vendor_detail' product.vendor.slug %}" style="text-decoration:none">
+    <a href="{% url 'vendor_detail' product.vendor.slug %}"
+       style="text-decoration:none">
       <div class="vendor-name">
-        🏪 {{ product.vendor.shop_name }} &middot; {{ product.vendor.location }}
+        &#128722; {{ product.vendor.shop_name }} &middot; {{ product.vendor.location }}
       </div>
     </a>
 
@@ -86,20 +90,26 @@
     </div>
     {% endif %}
 
+    <!-- This empty div pushes the button to the bottom -->
+    <div style="flex:1"></div>
+
   </div>
 
-  <!-- Add to cart button -->
+  <!-- Add to Cart button — always at the bottom -->
   <div class="px-3 pb-3">
     {% if product.stock > 0 %}
       <form method="post" action="{% url 'add_to_cart' product.pk %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-kerala w-100" style="font-size:0.85rem;padding:7px">
+        <button type="submit"
+                class="btn btn-kerala w-100"
+                style="font-size:0.85rem;padding:7px">
           <i class="bi bi-bag-plus me-1"></i> Add to Cart
         </button>
       </form>
     {% else %}
-      <button class="btn w-100 disabled"
-              style="font-size:0.85rem;padding:7px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:8px"
+      <button class="btn w-100"
+              style="font-size:0.85rem;padding:7px;background:#f3f4f6;
+                     color:#9ca3af;border:none;border-radius:8px"
               disabled>
         Out of Stock
       </button>
