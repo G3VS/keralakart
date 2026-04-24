@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+{% block title %}Buy Now — KeralaKart{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width:900px">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{% url 'product_detail' product.slug %}"
+       class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h2 class="section-heading mb-0">
+      <i class="bi bi-lightning-fill me-2" style="color:var(--gold)"></i>
+      Quick <span>Checkout</span>
+    </h2>
+  </div>
+
+  <!-- Product summary banner -->
+  <div class="bg-white rounded-3 p-3 mb-4 d-flex align-items-center gap-3"
+       style="border:1.5px solid var(--green)">
+    {% if product.image %}
+      <img src="{{ product.image.url }}"
+           style="width:60px;height:60px;object-fit:cover;border-radius:10px"
+           alt="{{ product.name }}">
+    {% else %}
+      <div style="width:60px;height:60px;background:#e8f5ec;border-radius:10px;
+                  display:flex;align-items:center;justify-content:center;font-size:1.8rem">
+        🌿
+      </div>
+    {% endif %}
+    <div class="flex-grow-1">
+      <div style="font-weight:500;font-size:0.95rem">{{ product.name }}</div>
+      <div style="font-size:0.82rem;color:var(--muted)">
+        {{ product.vendor.shop_name }} &middot; {{ product.vendor.location }}
+      </div>
+    </div>
+    <div style="font-weight:700;font-size:1.2rem;color:var(--green)">
+      &#8377;{{ product.price }}
+    </div>
+  </div>
+
+  <form method="post" id="buynow-form">
+    {% csrf_token %}
+    <div class="row g-4">
+
+      <!-- Left — Address & Payment -->
+      <div class="col-lg-7">
+
+        <!-- Delivery Address -->
+        <div class="bg-white rounded-3 p-4 mb-3"
+             style="border:1px solid rgba(0,0,0,0.07)">
+          <h6 style="font-weight:600" class="mb-3">&#128230; Delivery Address</h6>
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label">Full Name *</label>
+              <input type="text"
+                     name="full_name"
+                     class="form-control"
+                     required
+                     value="{{ user.get_full_name }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Email *</label>
+              <input type="email"
+                     name="email"
+                     class="form-control"
+                     required
+                     value="{{ user.email }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Phone *</label>
+              <input type="tel"
+                     name="phone"
+                     class="form-control"
+                     required
+                     placeholder="+91 XXXXX XXXXX">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Address Line 1 *</label>
+              <input type="text"
+                     name="address_line1"
+                     class="form-control"
+                     required
+                     placeholder="House No., Street Name">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">
+                Address Line 2
+                <span class="text-muted">(optional)</span>
+              </label>
+              <input type="text"
+                     name="address_line2"
+                     class="form-control"
+                     placeholder="Landmark, Area">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">City *</label>
+              <input type="text"
+                     name="city"
+                     class="form-control"
+                     required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">State *</label>
+              <input type="text"
+                     name="state"
+                     class="form-control"
+                     value="Kerala">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Pincode *</label>
+              <input type="text"
+                     name="pincode"
+                     class="form-control"
+                     required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Country *</label>
+              <input type="text"
+                     name="country"
+                     class="form-control"
+                     value="India">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="bg-white rounded-3 p-4"
+             style="border:1px solid rgba(0,0,0,0.07)">
+          <h6 style="font-weight:600" class="mb-3">&#128179; Payment Method</h6>
+          <div class="d-flex flex-column gap-2">
+
+            <label id="label-cod"
+                   style="display:flex;align-items:center;gap:12px;padding:14px;
+                          border:1.5px solid var(--green);border-radius:10px;
+                          cursor:pointer;margin-bottom:0">
+              <input type="radio"
+                     name="payment_method"
+                     value="COD"
+                     checked
+                     onchange="switchPaymentUI('COD')">
+              <div>
+                <div style="font-weight:500;font-size:0.95rem">
+                  &#128230; Cash on Delivery
+                </div>
+                <div style="font-size:0.8rem;color:var(--muted)">
+                  Pay when you receive the order
+                </div>
+              </div>
+            </label>
+
+            <label id="label-razorpay"
+                   style="display:flex;align-items:center;gap:12px;padding:14px;
+                          border:1.5px solid rgba(0,0,0,0.1);border-radius:10px;
+                          cursor:pointer;margin-bottom:0">
+              <input type="radio"
+                     name="payment_method"
+                     value="Razorpay"
+                     onchange="switchPaymentUI('Razorpay')">
+              <div>
+                <div style="font-weight:500;font-size:0.95rem">
+                  &#128179; Pay Online
+                </div>
+                <div style="font-size:0.8rem;color:var(--muted)">
+                  Credit Card / Debit Card / Wallets
+                </div>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right — Order Summary -->
+      <div class="col-lg-5">
+        <div class="bg-white rounded-3 p-4"
+             style="border:1px solid rgba(0,0,0,0.07);position:sticky;top:1rem">
+
+          <h6 style="font-weight:600" class="mb-3">&#128717; Order Summary</h6>
+
+          {% for item in items %}
+          <div class="d-flex justify-content-between mb-2"
+               style="font-size:0.88rem">
+            <span>{{ item.product.name|truncatechars:26 }} &times;{{ item.quantity }}</span>
+            <span>&#8377;{{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+
+          <hr>
+
+          <div class="d-flex justify-content-between mb-1">
+            <span>Subtotal</span>
+            <span>&#8377;{{ total }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-1 text-success">
+            <span>Shipping</span>
+            <span>
+              {% if total >= 999 %}FREE{% else %}&#8377;99{% endif %}
+            </span>
+          </div>
+
+          <hr>
+
+          <div class="d-flex justify-content-between mb-4"
+               style="font-weight:600;font-size:1.1rem">
+            <span>Total</span>
+            <span style="color:var(--green)">
+              {% if total >= 999 %}
+                &#8377;{{ total }}
+              {% else %}
+                &#8377;{{ total|add:99 }}
+              {% endif %}
+            </span>
+          </div>
+
+          <!-- COD button -->
+          <button type="submit"
+                  id="btn-cod"
+                  class="btn btn-kerala w-100 btn-lg">
+            Place Order &#127881;
+          </button>
+
+          <!-- Razorpay button -->
+          <button type="button"
+                  id="btn-razorpay"
+                  class="btn btn-kerala w-100 btn-lg"
+                  style="display:none"
+                  onclick="initiateRazorpayPayment()">
+            &#128179; Pay Now Securely
+          </button>
+
+          <p class="text-center text-muted mt-3 mb-0" style="font-size:0.78rem">
+            &#128274; 100% Secure Checkout
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+  var CSRF_TOKEN = '{{ csrf_token }}';
+
+  function switchPaymentUI(method) {
+    var btnCod        = document.getElementById('btn-cod');
+    var btnRazorpay   = document.getElementById('btn-razorpay');
+    var labelCod      = document.getElementById('label-cod');
+    var labelRazorpay = document.getElementById('label-razorpay');
+
+    if (method === 'COD') {
+      btnCod.style.display            = 'block';
+      btnRazorpay.style.display       = 'none';
+      labelCod.style.borderColor      = 'var(--green)';
+      labelRazorpay.style.borderColor = 'rgba(0,0,0,0.1)';
+    } else {
+      btnCod.style.display            = 'none';
+      btnRazorpay.style.display       = 'block';
+      labelCod.style.borderColor      = 'rgba(0,0,0,0.1)';
+      labelRazorpay.style.borderColor = 'var(--green)';
+    }
+  }
+
+  document.getElementById('buynow-form').addEventListener('submit', function(e) {
+    var method = document.querySelector(
+      'input[name="payment_method"]:checked'
+    ).value;
+    if (method === 'Razorpay') {
+      e.preventDefault();
+    }
+  });
+
+  function initiateRazorpayPayment() {
+    var form = document.getElementById('buynow-form');
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    var btn       = document.getElementById('btn-razorpay');
+    btn.disabled  = true;
+    btn.innerHTML = '&#9203; Processing...';
+
+    var formData = new FormData(form);
+
+    // Step 1 — Create Django order
+    fetch("{% url 'buy_now_checkout' %}", {
+      method:  'POST',
+      headers: { 'X-CSRFToken': CSRF_TOKEN },
+      body:    formData,
+    })
+    .then(function(response) {
+      var contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server error. Please try again.');
+      }
+      return response.json();
+    })
+    .then(function(orderData) {
+      if (!orderData.order_id) {
+        throw new Error(orderData.error || 'Could not create order.');
+      }
+
+      // Step 2 — Create Razorpay order
+      return fetch("{% url 'create_razorpay_order' %}", {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken':  CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          order_id: orderData.order_id,
+          total:    orderData.total,
+        }),
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(razorpayData) {
+
+        if (razorpayData.error) {
+          throw new Error(razorpayData.error);
+        }
+
+        // Step 3 — Open Razorpay popup
+        var options = {
+          key:         razorpayData.razorpay_key_id,
+          amount:      razorpayData.amount,
+          currency:    razorpayData.currency,
+          name:        'KeralaKart',
+          description: 'Authentic Kerala Products',
+          order_id:    razorpayData.razorpay_order_id,
+
+          config: {
+            display: {
+              blocks: {
+                card: {
+                  name: 'Pay by Card',
+                  instruments: [{ method: 'card' }]
+                },
+                wallet: {
+                  name: 'Pay by Wallet',
+                  instruments: [{
+                    method:  'wallet',
+                    wallets: ['paytm', 'mobikwik', 'freecharge', 'airtel']
+                  }]
+                }
+              },
+              sequence: ['block.card', 'block.wallet'],
+              preferences: { show_default_blocks: false }
+            }
+          },
+
+          handler: function(response) {
+            var overlay           = document.createElement('div');
+            overlay.id            = 'pay-overlay';
+            overlay.style.cssText =
+              'position:fixed;top:0;left:0;width:100%;height:100%;' +
+              'background:rgba(255,255,255,0.95);display:flex;'      +
+              'flex-direction:column;align-items:center;'            +
+              'justify-content:center;z-index:9999';
+            overlay.innerHTML =
+              '<div style="font-size:3rem">&#9989;</div>'  +
+              '<div style="font-size:1.1rem;font-weight:500;' +
+              'color:#1a6b3c;margin-top:12px">'            +
+              'Payment successful!</div>'                  +
+              '<div style="font-size:0.9rem;color:#6b7280;' +
+              'margin-top:6px">Confirming your order...</div>';
+            document.body.appendChild(overlay);
+
+            fetch("{% url 'verify_razorpay_payment' %}", {
+              method:  'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken':  CSRF_TOKEN,
+              },
+              body: JSON.stringify({
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature,
+                django_order_id:     razorpayData.django_order_id,
+              }),
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(verifyData) {
+              if (verifyData.status === 'success') {
+                window.location.href = '/orders/' + verifyData.order_id + '/';
+              } else {
+                document.getElementById('pay-overlay').remove();
+                alert('Verification failed: ' + (verifyData.error || 'Please contact support'));
+                window.location.href = "{% url 'payment_failed' %}";
+              }
+            })
+            .catch(function(err) {
+              console.error('Verify error:', err);
+              document.getElementById('pay-overlay').remove();
+              alert('Verification error. Please check your orders page.');
+              window.location.href = "{% url 'my_orders' %}";
+            });
+          },
+
+          prefill: {
+            name:    document.querySelector('input[name="full_name"]').value,
+            email:   document.querySelector('input[name="email"]').value,
+            contact: document.querySelector('input[name="phone"]').value,
+          },
+
+          theme: { color: '#1a6b3c' },
+
+          modal: {
+            ondismiss:     function() { resetButton(); },
+            escape:        true,
+            backdropclose: false,
+            confirm_close: true,
+          },
+
+          retry: { enabled: false },
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+          alert('Payment failed: ' + response.error.description);
+          resetButton();
+        });
+        rzp.open();
+      });
+    })
+    .catch(function(error) {
+      console.error('Payment error:', error);
+      alert('Something went wrong: ' + error.message);
+      resetButton();
+    });
+  }
+
+  function resetButton() {
+    var btn       = document.getElementById('btn-razorpay');
+    btn.disabled  = false;
+    btn.innerHTML = '&#128179; Pay Now Securely';
+  }
+</script>
+
+{% endblock %}

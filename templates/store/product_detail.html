@@ -7,157 +7,244 @@
   <!-- Breadcrumb -->
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb" style="font-size:0.85rem">
-      <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none" style="color:var(--green)">Home</a></li>
-      <li class="breadcrumb-item"><a href="{% url 'product_list' %}" class="text-decoration-none" style="color:var(--green)">Products</a></li>
-      {% if product.category %}<li class="breadcrumb-item"><a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="text-decoration-none" style="color:var(--green)">{{ product.category.name }}</a></li>{% endif %}
+      <li class="breadcrumb-item">
+        <a href="{% url 'home' %}" class="text-decoration-none" style="color:var(--green)">Home</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'product_list' %}" class="text-decoration-none" style="color:var(--green)">Products</a>
+      </li>
+      {% if product.category %}
+      <li class="breadcrumb-item">
+        <a href="{% url 'product_list' %}?category={{ product.category.slug }}"
+           class="text-decoration-none" style="color:var(--green)">
+          {{ product.category.name }}
+        </a>
+      </li>
+      {% endif %}
       <li class="breadcrumb-item active">{{ product.name|truncatechars:30 }}</li>
     </ol>
   </nav>
 
   <div class="row g-4">
+
     <!-- Image -->
     <div class="col-md-5">
-      <div class="bg-white rounded-3 overflow-hidden" style="border:1px solid rgba(0,0,0,0.07)">
+      <div class="bg-white rounded-3 overflow-hidden"
+           style="border:1px solid rgba(0,0,0,0.07)">
         {% if product.image %}
-        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-100" style="max-height:420px;object-fit:cover">
+          <img src="{{ product.image.url }}"
+               alt="{{ product.name }}"
+               class="w-100"
+               style="max-height:420px;object-fit:cover">
         {% else %}
-        <div style="height:380px;background:linear-gradient(135deg,#e8f5ec,#fdf3e0);display:flex;align-items:center;justify-content:center;font-size:6rem">
-          {{ product.category.icon|default:"🌿" }}
-        </div>
+          <div style="height:380px;background:linear-gradient(135deg,#e8f5ec,#fdf3e0);
+                      display:flex;align-items:center;justify-content:center;font-size:6rem">
+            {{ product.category.icon|default:"🌿" }}
+          </div>
         {% endif %}
       </div>
     </div>
 
     <!-- Info -->
     <div class="col-md-7">
+
       {% if product.category %}
-      <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="badge mb-2 text-decoration-none" style="background:var(--green);font-size:0.8rem">
+      <a href="{% url 'product_list' %}?category={{ product.category.slug }}"
+         class="badge mb-2 text-decoration-none"
+         style="background:var(--green);font-size:0.8rem">
         {{ product.category.icon }} {{ product.category.name }}
       </a>
       {% endif %}
 
-      <h1 style="font-size:1.7rem;font-weight:600;margin-bottom:6px">{{ product.name }}</h1>
+      <h1 style="font-size:1.7rem;font-weight:600;margin-bottom:6px">
+        {{ product.name }}
+      </h1>
 
-      <a href="{% url 'vendor_detail' product.vendor.slug %}" class="text-decoration-none" style="color:var(--muted);font-size:0.9rem">
-        🏪 {{ product.vendor.shop_name }} · {{ product.vendor.location }}
+      <a href="{% url 'vendor_detail' product.vendor.slug %}"
+         class="text-decoration-none"
+         style="color:var(--muted);font-size:0.9rem">
+        &#128722; {{ product.vendor.shop_name }} &middot; {{ product.vendor.location }}
       </a>
 
       <!-- Rating -->
       <div class="d-flex align-items-center gap-2 mt-2 mb-3">
-        <span class="stars">
+        <span>
           {% with r=product.avg_rating %}
-          {% if r >= 1 %}⭐{% endif %}{% if r >= 2 %}⭐{% endif %}{% if r >= 3 %}⭐{% endif %}{% if r >= 4 %}⭐{% endif %}{% if r >= 5 %}⭐{% endif %}
+            {% if r >= 1 %}<span style="color:#c8922a">&#9733;</span>{% endif %}
+            {% if r >= 2 %}<span style="color:#c8922a">&#9733;</span>{% endif %}
+            {% if r >= 3 %}<span style="color:#c8922a">&#9733;</span>{% endif %}
+            {% if r >= 4 %}<span style="color:#c8922a">&#9733;</span>{% endif %}
+            {% if r >= 5 %}<span style="color:#c8922a">&#9733;</span>{% endif %}
           {% endwith %}
         </span>
-        <span style="font-size:0.85rem;color:var(--muted)">{{ product.avg_rating }} ({{ reviews.count }} reviews)</span>
+        <span style="font-size:0.85rem;color:var(--muted)">
+          {{ product.avg_rating }} ({{ reviews.count }} reviews)
+        </span>
       </div>
 
       <!-- Price -->
       <div class="d-flex align-items-baseline gap-3 mb-3">
-        <span style="font-size:2rem;font-weight:700;color:var(--green)">₹{{ product.price }}</span>
+        <span style="font-size:2rem;font-weight:700;color:var(--green)">
+          &#8377;{{ product.price }}
+        </span>
         {% if product.original_price %}
-        <span style="font-size:1.1rem;color:var(--muted);text-decoration:line-through">₹{{ product.original_price }}</span>
-        <span class="badge" style="background:#fde8e8;color:#c0392b;font-size:0.85rem">{{ product.discount_percent }}% OFF</span>
+          <span style="font-size:1.1rem;color:var(--muted);text-decoration:line-through">
+            &#8377;{{ product.original_price }}
+          </span>
+          <span class="badge"
+                style="background:#fde8e8;color:#c0392b;font-size:0.85rem">
+            {{ product.discount_percent }}% OFF
+          </span>
         {% endif %}
       </div>
 
-      <!-- Meta -->
+      <!-- Meta badges -->
       <div class="d-flex flex-wrap gap-2 mb-3">
-        {% if product.weight %}<span class="badge bg-light text-dark border">⚖️ {{ product.weight }}</span>{% endif %}
-        {% if product.origin %}<span class="badge bg-light text-dark border">📍 {{ product.origin }}</span>{% endif %}
-        <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
-          {% if product.stock > 0 %}✓ In Stock ({{ product.stock }}){% else %}Out of Stock{% endif %}
-        </span>
+        {% if product.weight %}
+          <span class="badge bg-light text-dark border">&#9878; {{ product.weight }}</span>
+        {% endif %}
+        {% if product.origin %}
+          <span class="badge bg-light text-dark border">&#128205; {{ product.origin }}</span>
+        {% endif %}
+        {% if product.stock > 0 %}
+          <span class="badge bg-success">&#10003; In Stock ({{ product.stock }})</span>
+        {% else %}
+          <span class="badge bg-danger">Out of Stock</span>
+        {% endif %}
       </div>
 
       <hr>
-      <p style="font-size:0.95rem;line-height:1.7;color:#374151">{{ product.description }}</p>
+
+      <p style="font-size:0.95rem;line-height:1.7;color:#374151">
+        {{ product.description }}
+      </p>
+
       <hr>
 
-      <!-- Actions -->
+      <!-- Action buttons -->
       {% if product.stock > 0 %}
-      <div class="d-flex gap-3 mt-3 flex-wrap">
+      <div class="d-flex flex-wrap gap-2 mt-3">
+
+        <!-- Add to Cart -->
         <form method="post" action="{% url 'add_to_cart' product.pk %}">
           {% csrf_token %}
-          <button type="submit" class="btn btn-kerala btn-lg px-4">
+          <button type="submit"
+                  class="btn btn-outline-kerala btn-lg px-4">
             <i class="bi bi-bag-plus me-2"></i>Add to Cart
           </button>
         </form>
+
+        <!-- Buy Now -->
+        <form method="post" action="{% url 'buy_now' product.pk %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="btn btn-kerala btn-lg px-4">
+            <i class="bi bi-lightning-fill me-2"></i>Buy Now
+          </button>
+        </form>
+
+        <!-- Wishlist -->
         {% if user.is_authenticated %}
-        <a href="{% url 'toggle_wishlist' product.pk %}" class="btn btn-lg {% if in_wishlist %}btn-danger{% else %}btn-outline-danger{% endif %}">
+        <a href="{% url 'toggle_wishlist' product.pk %}"
+           class="btn btn-lg {% if in_wishlist %}btn-danger{% else %}btn-outline-danger{% endif %}">
           <i class="bi bi-heart{% if in_wishlist %}-fill{% endif %}"></i>
           {% if in_wishlist %}Wishlisted{% else %}Wishlist{% endif %}
         </a>
         {% endif %}
+
       </div>
+
       {% else %}
-      <div class="alert alert-warning">This product is currently out of stock.</div>
+      <div class="alert alert-warning mt-3">
+        This product is currently out of stock.
+      </div>
       {% endif %}
+
     </div>
   </div>
 
-  <!-- Reviews -->
+  <!-- Reviews section -->
   <div class="row mt-5">
     <div class="col-lg-8">
       <h4 class="section-heading mb-3">Customer <span>Reviews</span></h4>
 
       {% if user.is_authenticated and not user_review %}
-      <div class="bg-white rounded-3 p-4 mb-4" style="border:1px solid rgba(0,0,0,0.07)">
-        <h6 class="fw-600 mb-3">Write a Review</h6>
+      <div class="bg-white rounded-3 p-4 mb-4"
+           style="border:1px solid rgba(0,0,0,0.07)">
+        <h6 style="font-weight:600" class="mb-3">Write a Review</h6>
         <form method="post">
           {% csrf_token %}
           <input type="hidden" name="review_submit" value="1">
           <div class="mb-2">
             <label class="form-label">Rating</label>
-            <select name="rating" class="form-select form-select-sm" style="width:140px">
-              <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
-              <option value="4">⭐⭐⭐⭐ Good</option>
-              <option value="3">⭐⭐⭐ Average</option>
-              <option value="2">⭐⭐ Poor</option>
-              <option value="1">⭐ Terrible</option>
+            <select name="rating" class="form-select form-select-sm" style="width:160px">
+              <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733; Excellent</option>
+              <option value="4">&#9733;&#9733;&#9733;&#9733; Good</option>
+              <option value="3">&#9733;&#9733;&#9733; Average</option>
+              <option value="2">&#9733;&#9733; Poor</option>
+              <option value="1">&#9733; Terrible</option>
             </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Your Review</label>
-            <textarea name="comment" class="form-control" rows="3" placeholder="Share your experience with this product..."></textarea>
+            <textarea name="comment"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Share your experience with this product..."></textarea>
           </div>
-          <button type="submit" class="btn btn-kerala btn-sm">Submit Review</button>
+          <button type="submit" class="btn btn-kerala btn-sm">
+            Submit Review
+          </button>
         </form>
       </div>
       {% endif %}
 
       {% for review in reviews %}
-      <div class="bg-white rounded-3 p-3 mb-3" style="border:1px solid rgba(0,0,0,0.07)">
+      <div class="bg-white rounded-3 p-3 mb-3"
+           style="border:1px solid rgba(0,0,0,0.07)">
         <div class="d-flex align-items-center gap-2 mb-1">
-          <div style="width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--green);
+                      color:#fff;display:flex;align-items:center;justify-content:center;
+                      font-size:0.8rem;font-weight:600">
             {{ review.user.username|first|upper }}
           </div>
           <div>
             <span style="font-size:0.9rem;font-weight:500">{{ review.user.username }}</span>
-            <span class="stars ms-2" style="font-size:0.8rem">
-              {% if review.rating >= 1 %}⭐{% endif %}{% if review.rating >= 2 %}⭐{% endif %}{% if review.rating >= 3 %}⭐{% endif %}{% if review.rating >= 4 %}⭐{% endif %}{% if review.rating >= 5 %}⭐{% endif %}
+            <span class="ms-2">
+              {% if review.rating >= 1 %}<span style="color:#c8922a;font-size:0.8rem">&#9733;</span>{% endif %}
+              {% if review.rating >= 2 %}<span style="color:#c8922a;font-size:0.8rem">&#9733;</span>{% endif %}
+              {% if review.rating >= 3 %}<span style="color:#c8922a;font-size:0.8rem">&#9733;</span>{% endif %}
+              {% if review.rating >= 4 %}<span style="color:#c8922a;font-size:0.8rem">&#9733;</span>{% endif %}
+              {% if review.rating >= 5 %}<span style="color:#c8922a;font-size:0.8rem">&#9733;</span>{% endif %}
             </span>
           </div>
-          <span class="ms-auto text-muted" style="font-size:0.78rem">{{ review.created_at|date:"d M Y" }}</span>
+          <span class="ms-auto text-muted" style="font-size:0.78rem">
+            {{ review.created_at|date:"d M Y" }}
+          </span>
         </div>
-        <p class="mb-0 mt-2" style="font-size:0.9rem;color:#374151">{{ review.comment }}</p>
+        <p class="mb-0 mt-2" style="font-size:0.9rem;color:#374151">
+          {{ review.comment }}
+        </p>
       </div>
       {% empty %}
       <p class="text-muted">No reviews yet. Be the first to review this product!</p>
       {% endfor %}
     </div>
 
-    <!-- Related -->
+    <!-- Related products -->
     <div class="col-lg-4">
       {% if related %}
       <h5 class="section-heading mb-3">You may <span>also like</span></h5>
       {% for p in related %}
       <div class="mb-3">
-        {% with product=p %}{% include 'partials/product_card.html' %}{% endwith %}
+        {% with product=p %}
+          {% include 'partials/product_card.html' %}
+        {% endwith %}
       </div>
       {% endfor %}
       {% endif %}
     </div>
   </div>
+
 </div>
 {% endblock %}

@@ -145,6 +145,88 @@ def add_to_cart(request, pk):
     messages.success(request, 'Added to cart!')
     return redirect(request.META.get('HTTP_REFERER', 'cart'))
 
+@login_required
+def buy_now(request, pk):
+    product = get_object_or_404(Product, pk=pk, is_active=True)
+    
+    if product.stock == 0:
+        messages.error(request, 'Sorry this product is out of stock.')
+        return redirect('product_detail', slug=product.slug)
+    
+    # Store buy now item separately in session
+    request.session['buy_now'] = {
+        'product_id': pk,
+        'quantity':   1,
+    }
+    request.session.modified = True
+    
+    return redirect('buy_now_checkout')
+
+
+@login_required
+def buy_now_checkout(request):
+    buy_now = request.session.get('buy_now')
+    
+    if not buy_now:
+        messages.warning(request, 'No product selected for direct purchase.')
+        return redirect('product_list')
+    
+    try:
+        product  = Product.objects.get(pk=buy_now['product_id'])
+        quantity = buy_now.get('quantity', 1)
+        subtotal = product.price * quantity
+        total    = subtotal
+    except Product.DoesNotExist:
+        messages.error(request, 'Product not found.')
+        return redirect('product_list')
+
+    items = [{'product': product, 'quantity': quantity, 'subtotal': subtotal}]
+
+    if request.method == 'POST':
+        order = Order.objects.create(
+            buyer          = request.user,
+            full_name      = request.POST['full_name'],
+            email          = request.POST['email'],
+            phone          = request.POST['phone'],
+            address_line1  = request.POST['address_line1'],
+            address_line2  = request.POST.get('address_line2', ''),
+            city           = request.POST['city'],
+            state          = request.POST.get('state', 'Kerala'),
+            pincode        = request.POST['pincode'],
+            country        = request.POST.get('country', 'India'),
+            payment_method = request.POST.get('payment_method', 'COD'),
+            is_paid        = False,
+        )
+
+        OrderItem.objects.create(
+            order    = order,
+            product  = product,
+            quantity = quantity,
+            price    = product.price,
+        )
+
+        # Clear buy now session
+        if 'buy_now' in request.session:
+            del request.session['buy_now']
+            request.session.modified = True
+
+        # COD — redirect immediately
+        if order.payment_method == 'COD':
+            messages.success(request, f'Order #{order.pk} placed successfully!')
+            return redirect('order_detail', pk=order.pk)
+
+        # Razorpay — return JSON for frontend
+        return JsonResponse({
+            'order_id': order.pk,
+            'total':    float(total),
+        })
+
+    return render(request, 'store/buy_now_checkout.html', {
+        'items':   items,
+        'total':   total,
+        'product': product,
+        'user':    request.user,
+    })
 
 def remove_from_cart(request, pk):
     cart = get_cart(request)

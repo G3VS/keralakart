@@ -22,6 +22,10 @@ urlpatterns = [
     # Wishlist
     path('wishlist/', views.wishlist_view, name='wishlist'),
     path('wishlist/toggle/<int:pk>/', views.toggle_wishlist, name='toggle_wishlist'),
+    
+    #BUY_NOW
+    path('buy-now/<int:pk>/',   views.buy_now,          name='buy_now'),
+    path('buy-now/checkout/',   views.buy_now_checkout,  name='buy_now_checkout'),
 
     # Vendor
     path('vendor-register/', views.vendor_register, name='vendor_register'),
