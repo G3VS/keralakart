@@ -114,3 +114,7 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # ── Razorpay ──────────────────────────────────────────────
 RAZORPAY_KEY_ID     = config('RAZORPAY_KEY_ID',     default='')
 RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://keralakart.onrender.com',
+]
