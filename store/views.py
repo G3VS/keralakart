@@ -121,7 +121,7 @@ def vendor_detail(request, slug):
 
 
 # ─── Cart ─────────────────────────────────────────────────────────────────────
-
+@login_required
 def cart_view(request):
     cart = get_cart(request)
     items = []
@@ -137,6 +137,7 @@ def cart_view(request):
     return render(request, 'store/cart.html', {'items': items, 'total': total})
 
 
+@login_required
 def add_to_cart(request, pk):
     cart = get_cart(request)
     pid = str(pk)
@@ -227,7 +228,7 @@ def buy_now_checkout(request):
         'product': product,
         'user':    request.user,
     })
-
+@login_required
 def remove_from_cart(request, pk):
     cart = get_cart(request)
     pid = str(pk)
@@ -236,7 +237,7 @@ def remove_from_cart(request, pk):
         save_cart(request, cart)
     return redirect('cart')
 
-
+@login_required
 def update_cart(request, pk):
     cart = get_cart(request)
     pid = str(pk)
