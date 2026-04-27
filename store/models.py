@@ -155,6 +155,8 @@ class Order(models.Model):
     country = models.CharField(max_length=100, default='India')
     payment_method = models.CharField(max_length=50, default='COD')
     is_paid = models.BooleanField(default=False)
+    estimated_delivery = models.DateField(null=True, blank=True)
+    tracking_note = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
