@@ -39,7 +39,7 @@
         {% for order in orders %}
         <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
           <div>
-            <span style="font-size:0.9rem;font-weight:500">Order #{{ order.pk }}</span>
+            <span style="font-size:0.9rem;font-weight:500">{{ order.order_reference }}</span>
             <span class="text-muted ms-2" style="font-size:0.8rem">{{ order.created_at|date:"d M Y" }}</span>
           </div>
           <div class="d-flex align-items-center gap-2">

@@ -246,7 +246,7 @@ def buy_now_checkout(request):
 
         # COD — redirect immediately
         if order.payment_method == 'COD':
-            messages.success(request, f'Order #{order.pk} placed successfully!')
+            messages.success(request, f'Order {order.order_reference()} placed successfully!')
             return redirect('order_detail', pk=order.pk)
 
         # Razorpay — return JSON for frontend
@@ -336,7 +336,7 @@ def checkout(request):
         # If COD, clear cart and redirect
         if order.payment_method == 'COD':
             request.session['cart'] = {}
-            messages.success(request, f'Order #{order.pk} placed successfully! 🎉')
+            messages.success(request, f'Order {order.order_reference()} placed successfully! 🎉')
             return redirect('order_detail', pk=order.pk)
         
         # If Razorpay, return order ID to frontend (handled by JS)

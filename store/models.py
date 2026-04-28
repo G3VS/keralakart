@@ -166,6 +166,11 @@ class Order(models.Model):
     def total_price(self):
         return sum(item.subtotal() for item in self.items.all())
 
+    def order_reference(self):
+        """Generate a friendly order reference like KK-2604-0022"""
+        month_year = self.created_at.strftime('%m%y')
+        return f'KK-{month_year}-{self.pk:04d}'
+      
     def __str__(self):
         return f'Order #{self.pk} by {self.buyer.username}'
 
