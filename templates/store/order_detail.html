@@ -15,6 +15,47 @@
     </span>
   </div>
 
+  <!-- Estimated delivery banner -->
+  {% if order.estimated_delivery and order.status != 'delivered' and order.status != 'cancelled' %}
+<div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-3"
+     style="background:linear-gradient(135deg,#e8f5ec,#fdf3e0);border:1px solid rgba(26,107,60,0.15)">
+  <div style="font-size:2rem">📦</div>
+    <div>
+      <div style="font-size:0.8rem;color:var(--muted);font-weight:500;
+                text-transform:uppercase;letter-spacing:0.5px">
+      Estimated Delivery
+      </div>
+    <div style="font-size:1.1rem;font-weight:600;color:var(--green)">
+      {{ order.estimated_delivery|date:"l, d F Y" }}
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted)">
+      {% if order.country|lower == 'india' %}
+        {% if order.state|lower == 'kerala' %}
+          Delivery within Kerala — 3 working days
+        {% else %}
+          Delivery across India — 7 working days
+        {% endif %}
+      {% else %}
+        International delivery — 14 working days
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if order.status == 'delivered' %}
+<div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-3"
+     style="background:#d1fae5;border:1px solid #6ee7b7">
+  <div style="font-size:2rem">🎉</div>
+  <div>
+    <div style="font-size:1rem;font-weight:600;color:#065f46">Order Delivered!</div>
+    <div style="font-size:0.85rem;color:#047857">
+      Thank you for shopping with KeralaKart
+    </div>
+  </div>
+</div>
+{% endif %}
+
   <!-- Progress tracker -->
   <div class="bg-white rounded-3 p-4 mb-3" style="border:1px solid rgba(0,0,0,0.07)">
     <div class="d-flex justify-content-between position-relative" style="padding:0 10px">
