@@ -10,6 +10,34 @@ import json
 from django.conf import settings
 from datetime import datetime, timedelta
 
+def calculate_delivery_date(country, state):
+    today = datetime.now().date()
+    
+    # Delivery days based on location
+    if country.lower() in ['india', 'in']:
+        kerala_districts = [
+            'thiruvananthapuram', 'kollam', 'pathanamthitta',
+            'alappuzha', 'kottayam', 'idukki', 'ernakulam',
+            'thrissur', 'palakkad', 'malappuram', 'kozhikode',
+            'wayanad', 'kannur', 'kasaragod', 'kerala'
+        ]
+        if state.lower() in kerala_districts:
+            days = 3   # Within Kerala
+        else:
+            days = 7   # Rest of India
+    else:
+        days = 14      # International / NRI
+
+    # Skip Sundays
+    delivery_date = today
+    days_added    = 0
+    while days_added < days:
+        delivery_date += timedelta(days=1)
+        if delivery_date.weekday() != 6:  # 6 = Sunday
+            days_added += 1
+
+    return delivery_date
+
 # ─── Cart helpers (session-based) ────────────────────────────────────────────
 
 def get_cart(request):
@@ -320,34 +348,6 @@ def checkout(request):
         'total': total,
         'user': request.user,
     })
-
-def calculate_delivery_date(country, state):
-    today = datetime.now().date()
-    
-    # Delivery days based on location
-    if country.lower() in ['india', 'in']:
-        kerala_districts = [
-            'thiruvananthapuram', 'kollam', 'pathanamthitta',
-            'alappuzha', 'kottayam', 'idukki', 'ernakulam',
-            'thrissur', 'palakkad', 'malappuram', 'kozhikode',
-            'wayanad', 'kannur', 'kasaragod', 'kerala'
-        ]
-        if state.lower() in kerala_districts:
-            days = 3   # Within Kerala
-        else:
-            days = 7   # Rest of India
-    else:
-        days = 14      # International / NRI
-
-    # Skip Sundays
-    delivery_date = today
-    days_added    = 0
-    while days_added < days:
-        delivery_date += timedelta(days=1)
-        if delivery_date.weekday() != 6:  # 6 = Sunday
-            days_added += 1
-
-    return delivery_date
 
 @login_required
 def order_detail(request, pk):
