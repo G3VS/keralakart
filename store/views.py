@@ -9,6 +9,7 @@ import razorpay
 import json
 from django.conf import settings
 from datetime import datetime, timedelta
+from .email_utils import send_order_confirmation_email, send_status_update_email
 
 def calculate_delivery_date(country, state):
     today = datetime.now().date()
@@ -336,7 +337,9 @@ def checkout(request):
         # If COD, clear cart and redirect
         if order.payment_method == 'COD':
             request.session['cart'] = {}
-            messages.success(request, f'Order {order.order_reference()} placed successfully! 🎉')
+            request.session.modified = True
+            send_order_confirmation_email(order)  # ← send email
+            messages.success(request, f'Order #{order.pk} placed successfully!')
             return redirect('order_detail', pk=order.pk)
         
         # If Razorpay, return order ID to frontend (handled by JS)
@@ -498,6 +501,7 @@ def update_order_status(request, pk):
     if request.method == 'POST':
         item.order.status = request.POST['status']
         item.order.save()
+        send_status_update_email(item.order) 
         messages.success(request, 'Order status updated.')
     return redirect('vendor_dashboard')
 

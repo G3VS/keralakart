@@ -21,7 +21,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-
 class Vendor(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending Approval'),
@@ -62,7 +61,6 @@ class Vendor(models.Model):
 
     def __str__(self):
         return self.shop_name
-
 
 class Product(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='products')
@@ -110,7 +108,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-
 class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -124,7 +121,6 @@ class Review(models.Model):
     def __str__(self):
         return f'{self.user.username} → {self.product.name} ({self.rating}★)'
 
-
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -132,7 +128,6 @@ class Wishlist(models.Model):
 
     class Meta:
         unique_together = ('user', 'product')
-
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -173,7 +168,6 @@ class Order(models.Model):
       
     def __str__(self):
         return f'Order #{self.pk} by {self.buyer.username}'
-
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')

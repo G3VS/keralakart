@@ -5,7 +5,7 @@
 <div class="container mt-4" style="max-width:700px">
 
   <!-- Header -->
-  <h2 class="section-heading mb-0">Order <span>{{ order.order_reference }}</span></h2>
+  <div class="d-flex align-items-center gap-3 mb-4">
     <a href="{% url 'my_orders' %}" class="btn btn-sm btn-outline-secondary">
       <i class="bi bi-arrow-left"></i>
     </a>
@@ -17,44 +17,41 @@
 
   <!-- Estimated delivery banner -->
   {% if order.estimated_delivery and order.status != 'delivered' and order.status != 'cancelled' %}
-<div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-3"
-     style="background:linear-gradient(135deg,#e8f5ec,#fdf3e0);border:1px solid rgba(26,107,60,0.15)">
-  <div style="font-size:2rem">📦</div>
+  <div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-3"
+       style="background:linear-gradient(135deg,#e8f5ec,#fdf3e0);border:1px solid rgba(26,107,60,0.15)">
+    <div style="font-size:2rem">📦</div>
     <div>
-      <div style="font-size:0.8rem;color:var(--muted);font-weight:500;
-                text-transform:uppercase;letter-spacing:0.5px">
-      Estimated Delivery
+      <div style="font-size:0.8rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.5px">
+        Estimated Delivery
       </div>
-    <div style="font-size:1.1rem;font-weight:600;color:var(--green)">
-      {{ order.estimated_delivery|date:"l, d F Y" }}
-    </div>
-    <div style="font-size:0.8rem;color:var(--muted)">
-      {% if order.country|lower == 'india' %}
-        {% if order.state|lower == 'kerala' %}
-          Delivery within Kerala — 3 working days
+      <div style="font-size:1.1rem;font-weight:600;color:var(--green)">
+        {{ order.estimated_delivery|date:"l, d F Y" }}
+      </div>
+      <div style="font-size:0.8rem;color:var(--muted)">
+        {% if order.country|lower == 'india' %}
+          {% if order.state|lower == 'kerala' %}
+            Delivery within Kerala — 3 working days
+          {% else %}
+            Delivery across India — 7 working days
+          {% endif %}
         {% else %}
-          Delivery across India — 7 working days
+          International delivery — 14 working days
         {% endif %}
-      {% else %}
-        International delivery — 14 working days
-      {% endif %}
+      </div>
     </div>
   </div>
-</div>
-{% endif %}
+  {% endif %}
 
-{% if order.status == 'delivered' %}
-<div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-3"
-     style="background:#d1fae5;border:1px solid #6ee7b7">
-  <div style="font-size:2rem">🎉</div>
-  <div>
-    <div style="font-size:1rem;font-weight:600;color:#065f46">Order Delivered!</div>
-    <div style="font-size:0.85rem;color:#047857">
-      Thank you for shopping with KeralaKart
+  {% if order.status == 'delivered' %}
+  <div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-3"
+       style="background:#d1fae5;border:1px solid #6ee7b7">
+    <div style="font-size:2rem">🎉</div>
+    <div>
+      <div style="font-size:1rem;font-weight:600;color:#065f46">Order Delivered!</div>
+      <div style="font-size:0.85rem;color:#047857">Thank you for shopping with KeralaKart</div>
     </div>
   </div>
-</div>
-{% endif %}
+  {% endif %}
 
   <!-- Progress tracker -->
   <div class="bg-white rounded-3 p-4 mb-3" style="border:1px solid rgba(0,0,0,0.07)">
@@ -62,15 +59,13 @@
 
       <!-- Track line -->
       <div style="position:absolute;top:14px;left:10%;right:10%;height:3px;background:#e5e7eb;z-index:0">
-        {% if order.status == 'confirmed' %}
-          <div style="height:100%;background:var(--green);width:33%"></div>
-        {% elif order.status == 'shipped' %}
-          <div style="height:100%;background:var(--green);width:66%"></div>
-        {% elif order.status == 'delivered' %}
-          <div style="height:100%;background:var(--green);width:100%"></div>
-        {% else %}
-          <div style="height:100%;background:var(--green);width:0%"></div>
-        {% endif %}
+        <div style="height:100%;background:var(--green);width:
+          {% if order.status == 'confirmed' %}33%
+          {% elif order.status == 'shipped' %}66%
+          {% elif order.status == 'delivered' %}100%
+          {% else %}0%
+          {% endif %}">
+        </div>
       </div>
 
       <!-- Step 1: Confirmed -->
@@ -116,17 +111,13 @@
 
         {% for item in order.items.all %}
         <div class="d-flex align-items-center gap-3 py-2 {% if not forloop.last %}border-bottom{% endif %}">
-
           {% if item.product and item.product.image %}
             <img src="{{ item.product.image.url }}"
                  alt="{{ item.product.name }}"
                  style="width:52px;height:52px;border-radius:8px;object-fit:cover">
           {% else %}
-            <div style="width:52px;height:52px;background:#e8f5ec;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem">
-              🌿
-            </div>
+            <div style="width:52px;height:52px;background:#e8f5ec;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">🌿</div>
           {% endif %}
-
           <div class="flex-grow-1">
             <div style="font-size:0.9rem;font-weight:500">
               {{ item.product.name|default:"Product no longer available" }}
@@ -135,7 +126,6 @@
               Qty: {{ item.quantity }} &times; &#8377;{{ item.price }}
             </div>
           </div>
-
           <span style="font-weight:600">&#8377;{{ item.subtotal }}</span>
         </div>
         {% empty %}
@@ -143,7 +133,8 @@
         {% endfor %}
 
         <!-- Total -->
-        <div class="d-flex justify-content-between pt-3 mt-1" style="border-top:2px solid #e5e7eb;font-weight:600">
+        <div class="d-flex justify-content-between pt-3 mt-1"
+             style="border-top:2px solid #e5e7eb;font-weight:600">
           <span>Total Paid</span>
           <span style="color:var(--green);font-size:1.1rem">&#8377;{{ order.total_price }}</span>
         </div>
@@ -189,6 +180,14 @@
         <p class="mb-0" style="font-size:0.88rem">
           <strong>Updated:</strong> {{ order.updated_at|date:"d M Y, h:i A" }}
         </p>
+
+        {% if order.estimated_delivery and order.status != 'delivered' and order.status != 'cancelled' %}
+        <hr>
+        <h6 style="font-weight:600" class="mb-2">Estimated Delivery</h6>
+        <p class="mb-0" style="font-size:0.88rem;color:var(--green);font-weight:500">
+          {{ order.estimated_delivery|date:"d M Y" }}
+        </p>
+        {% endif %}
 
       </div>
     </div>
