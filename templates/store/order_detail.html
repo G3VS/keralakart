@@ -9,7 +9,7 @@
     <a href="{% url 'my_orders' %}" class="btn btn-sm btn-outline-secondary">
       <i class="bi bi-arrow-left"></i>
     </a>
-    <h2 class="section-heading mb-0">Order <span>#{{ order.pk }}</span></h2>
+    <h2 class="section-heading mb-0">Order <span>{{ order.order_reference }}</span></h2>
     <span class="badge px-3 py-2 status-{{ order.status }}">
       {{ order.get_status_display }}
     </span>

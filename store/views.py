@@ -339,7 +339,7 @@ def checkout(request):
             request.session['cart'] = {}
             request.session.modified = True
             send_order_confirmation_email(order)  # ← send email
-            messages.success(request, f'Order #{order.pk} placed successfully!')
+            messages.success(request, f'Order {order.order_reference()} placed successfully! 🎉')
             return redirect('order_detail', pk=order.pk)
         
         # If Razorpay, return order ID to frontend (handled by JS)
@@ -573,6 +573,7 @@ def verify_razorpay_payment(request):
             order.is_paid = True
             order.status = 'confirmed'
             order.save()
+            send_order_confirmation_email(order) 
             
             # Clear the cart
             request.session['cart'] = {}
