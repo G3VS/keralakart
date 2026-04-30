@@ -9,7 +9,6 @@ import razorpay
 import json
 from django.conf import settings
 from datetime import datetime, timedelta
-from .email_utils import send_order_confirmation_email, send_status_update_email
 
 def calculate_delivery_date(country, state):
     today = datetime.now().date()
@@ -518,47 +517,43 @@ def update_order_status(request, pk):
 
 @login_required
 def create_razorpay_order(request):
-    """Step 1: Create Razorpay order and return credentials to frontend"""
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
+            data            = json.loads(request.body)
             django_order_id = data.get('order_id')
-            total_amount = data.get('total')
-            
+            total_amount    = data.get('total')
+
             if not django_order_id or not total_amount:
                 return JsonResponse({'error': 'Missing order details'}, status=400)
-            
-            # Amount in paise (Razorpay uses smallest currency unit)
+
             amount_paise = int(float(total_amount) * 100)
-            
+
             client = razorpay.Client(
                 auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
             )
-            
-            # Create Razorpay order
+
             razorpay_order = client.order.create({
-                'amount': amount_paise,
-                'currency': 'INR',
-                'receipt': f'order_{django_order_id}',
+                'amount':          amount_paise,
+                'currency':        'INR',
+                'receipt':         f'order_{django_order_id}',
                 'payment_capture': 1
             })
-            
+
             return JsonResponse({
                 'razorpay_order_id': razorpay_order['id'],
-                'razorpay_key_id': settings.RAZORPAY_KEY_ID,
-                'amount': amount_paise,
-                'currency': 'INR',
-                'django_order_id': django_order_id,
+                'razorpay_key_id':   settings.RAZORPAY_KEY_ID,
+                'amount':            amount_paise,
+                'currency':          'INR',
+                'django_order_id':   django_order_id,
             })
-            
+
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-    
+
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
 @csrf_exempt
-
 def verify_razorpay_payment(request):
     if request.method == 'POST':
         try:
@@ -568,25 +563,25 @@ def verify_razorpay_payment(request):
                 auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
             )
 
-            params_dict = {
+            client.utility.verify_payment_signature({
                 'razorpay_order_id':   data['razorpay_order_id'],
                 'razorpay_payment_id': data['razorpay_payment_id'],
                 'razorpay_signature':  data['razorpay_signature'],
-            }
+            })
 
-            client.utility.verify_payment_signature(params_dict)
-
+            # Payment verified — update order
             order = Order.objects.get(pk=data['django_order_id'])
             order.is_paid = True
             order.status  = 'confirmed'
             order.save()
 
-            # Clear the cart
+            # Clear cart
             request.session['cart'] = {}
             request.session.modified = True
 
-            # Send email separately — don't let email failure break payment
+            # Send email — isolated so it never breaks payment flow
             try:
+                from .email_utils import send_order_confirmation_email
                 send_order_confirmation_email(order)
             except Exception as email_error:
                 print(f'Email failed but payment succeeded: {email_error}')
@@ -609,30 +604,19 @@ def verify_razorpay_payment(request):
             }, status=404)
 
         except Exception as e:
+            print(f'Payment verification error: {e}')
             return JsonResponse({
                 'status': 'failed',
                 'error':  str(e)
             }, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
-def payment_success(request):
-    # 1. Get the order ID from the URL or session
-    order_id = request.GET.get('order_id')
-    order = Order.objects.get(id=order_id)
-    
-    # 2. UPDATE THE STATUS HERE
-    order.status = 'Paid'  # Make sure 'Paid' matches your model choices
-    order.is_paid = True   # If you have a boolean field for payment
-    order.save()
-    
-    return render(request, 'success.html', {'order': order})
+
 
 @login_required
 def payment_failed(request):
-    """Handle failed/cancelled payments"""
     messages.error(request, 'Payment was cancelled or failed. Please try again.')
     return redirect('cart')
-
 def test_api(request):
     return JsonResponse({"message": "API working!"})
 
