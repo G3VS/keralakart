@@ -10,10 +10,12 @@ import json
 from django.conf import settings
 from datetime import datetime, timedelta
 
+
+# ─── Delivery date calculator ─────────────────────────────────────────────────
+
 def calculate_delivery_date(country, state):
     today = datetime.now().date()
-    
-    # Delivery days based on location
+
     if country.lower() in ['india', 'in']:
         kerala_districts = [
             'thiruvananthapuram', 'kollam', 'pathanamthitta',
@@ -22,23 +24,33 @@ def calculate_delivery_date(country, state):
             'wayanad', 'kannur', 'kasaragod', 'kerala'
         ]
         if state.lower() in kerala_districts:
-            days = 3   # Within Kerala
+            days = 3
         else:
-            days = 7   # Rest of India
+            days = 7
     else:
-        days = 14      # International / NRI
+        days = 14
 
-    # Skip Sundays
     delivery_date = today
     days_added    = 0
     while days_added < days:
         delivery_date += timedelta(days=1)
-        if delivery_date.weekday() != 6:  # 6 = Sunday
+        if delivery_date.weekday() != 6:
             days_added += 1
 
     return delivery_date
 
-# ─── Cart helpers (session-based) ────────────────────────────────────────────
+
+# ─── Email helper ─────────────────────────────────────────────────────────────
+
+def try_send_email(func, order):
+    """Safely send email without breaking the main flow"""
+    try:
+        func(order)
+    except Exception as e:
+        print(f'Email error (non-critical): {e}')
+
+
+# ─── Cart helpers ─────────────────────────────────────────────────────────────
 
 def get_cart(request):
     return request.session.get('cart', {})
@@ -51,27 +63,27 @@ def save_cart(request, cart):
 # ─── Public pages ─────────────────────────────────────────────────────────────
 
 def home(request):
-    featured = Product.objects.filter(is_active=True, is_featured=True)[:8]
+    featured   = Product.objects.filter(is_active=True, is_featured=True)[:8]
     categories = Category.objects.all()
-    latest = Product.objects.filter(is_active=True)[:8]
-    vendors = Vendor.objects.filter(status='approved')[:6]
+    latest     = Product.objects.filter(is_active=True)[:8]
+    vendors    = Vendor.objects.filter(status='approved')[:6]
     return render(request, 'store/home.html', {
-        'featured': featured,
+        'featured':   featured,
         'categories': categories,
-        'latest': latest,
-        'vendors': vendors,
+        'latest':     latest,
+        'vendors':    vendors,
     })
 
 
 def product_list(request):
-    products = Product.objects.filter(is_active=True)
+    products   = Product.objects.filter(is_active=True)
     categories = Category.objects.all()
 
-    q = request.GET.get('q', '')
-    cat_slug = request.GET.get('category', '')
+    q         = request.GET.get('q', '')
+    cat_slug  = request.GET.get('category', '')
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
-    sort = request.GET.get('sort', '')
+    sort      = request.GET.get('sort', '')
 
     if q:
         products = products.filter(
@@ -96,25 +108,24 @@ def product_list(request):
     active_category = categories.filter(slug=cat_slug).first() if cat_slug else None
 
     return render(request, 'store/product_list.html', {
-        'products': products,
-        'categories': categories,
-        'q': q,
-        'cat_slug': cat_slug,
-        'min_price': min_price,
-        'max_price': max_price,
-        'sort': sort,
+        'products':        products,
+        'categories':      categories,
+        'q':               q,
+        'cat_slug':        cat_slug,
+        'min_price':       min_price,
+        'max_price':       max_price,
+        'sort':            sort,
         'active_category': active_category,
     })
 
 
 def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug, is_active=True)
-    related = Product.objects.filter(
-        category=product.category, is_active=True
-    ).exclude(pk=product.pk)[:4]
-    reviews = product.reviews.all().order_by('-created_at')
+    product  = get_object_or_404(Product, slug=slug, is_active=True)
+    related  = Product.objects.filter(category=product.category, is_active=True).exclude(pk=product.pk)[:4]
+    reviews  = product.reviews.all().order_by('-created_at')
     user_review = None
     in_wishlist = False
+
     if request.user.is_authenticated:
         user_review = reviews.filter(user=request.user).first()
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
@@ -132,34 +143,35 @@ def product_detail(request, slug):
             return redirect('product_detail', slug=slug)
 
     return render(request, 'store/product_detail.html', {
-        'product': product,
-        'related': related,
-        'reviews': reviews,
+        'product':     product,
+        'related':     related,
+        'reviews':     reviews,
         'user_review': user_review,
         'in_wishlist': in_wishlist,
     })
 
 
 def vendor_detail(request, slug):
-    vendor = get_object_or_404(Vendor, slug=slug, status='approved')
+    vendor   = get_object_or_404(Vendor, slug=slug, status='approved')
     products = vendor.products.filter(is_active=True)
     return render(request, 'store/vendor_detail.html', {
-        'vendor': vendor,
+        'vendor':   vendor,
         'products': products,
     })
 
 
 # ─── Cart ─────────────────────────────────────────────────────────────────────
+
 @login_required
 def cart_view(request):
-    cart = get_cart(request)
+    cart  = get_cart(request)
     items = []
     total = 0
     for pid, qty in cart.items():
         try:
-            p = Product.objects.get(pk=pid)
+            p        = Product.objects.get(pk=pid)
             subtotal = p.price * qty
-            total += subtotal
+            total   += subtotal
             items.append({'product': p, 'quantity': qty, 'subtotal': subtotal})
         except Product.DoesNotExist:
             pass
@@ -168,39 +180,63 @@ def cart_view(request):
 
 @login_required
 def add_to_cart(request, pk):
-    cart = get_cart(request)
-    pid = str(pk)
+    cart      = get_cart(request)
+    pid       = str(pk)
     cart[pid] = cart.get(pid, 0) + 1
     save_cart(request, cart)
     messages.success(request, 'Added to cart!')
     return redirect(request.META.get('HTTP_REFERER', 'cart'))
 
+
+@login_required
+def remove_from_cart(request, pk):
+    cart = get_cart(request)
+    pid  = str(pk)
+    if pid in cart:
+        del cart[pid]
+        save_cart(request, cart)
+    return redirect('cart')
+
+
+@login_required
+def update_cart(request, pk):
+    cart = get_cart(request)
+    pid  = str(pk)
+    qty  = int(request.POST.get('quantity', 1))
+    if qty > 0:
+        cart[pid] = qty
+    else:
+        cart.pop(pid, None)
+    save_cart(request, cart)
+    return redirect('cart')
+
+
+# ─── Buy Now ──────────────────────────────────────────────────────────────────
+
 @login_required
 def buy_now(request, pk):
     product = get_object_or_404(Product, pk=pk, is_active=True)
-    
+
     if product.stock == 0:
         messages.error(request, 'Sorry this product is out of stock.')
         return redirect('product_detail', slug=product.slug)
-    
-    # Store buy now item separately in session
+
     request.session['buy_now'] = {
         'product_id': pk,
         'quantity':   1,
     }
     request.session.modified = True
-    
     return redirect('buy_now_checkout')
 
 
 @login_required
 def buy_now_checkout(request):
     buy_now = request.session.get('buy_now')
-    
+
     if not buy_now:
         messages.warning(request, 'No product selected for direct purchase.')
         return redirect('product_list')
-    
+
     try:
         product  = Product.objects.get(pk=buy_now['product_id'])
         quantity = buy_now.get('quantity', 1)
@@ -239,17 +275,21 @@ def buy_now_checkout(request):
             price    = product.price,
         )
 
-        # Clear buy now session
         if 'buy_now' in request.session:
             del request.session['buy_now']
             request.session.modified = True
 
-        # COD — redirect immediately
+        # ── COD ──────────────────────────────────────────────
         if order.payment_method == 'COD':
+            try:
+                from .email_utils import send_order_confirmation_email
+                try_send_email(send_order_confirmation_email, order)
+            except ImportError:
+                pass
             messages.success(request, f'Order {order.order_reference()} placed successfully!')
             return redirect('order_detail', pk=order.pk)
 
-        # Razorpay — return JSON for frontend
+        # ── Razorpay — return JSON to frontend ────────────────
         return JsonResponse({
             'order_id': order.pk,
             'total':    float(total),
@@ -261,29 +301,9 @@ def buy_now_checkout(request):
         'product': product,
         'user':    request.user,
     })
-@login_required
-def remove_from_cart(request, pk):
-    cart = get_cart(request)
-    pid = str(pk)
-    if pid in cart:
-        del cart[pid]
-        save_cart(request, cart)
-    return redirect('cart')
-
-@login_required
-def update_cart(request, pk):
-    cart = get_cart(request)
-    pid = str(pk)
-    qty = int(request.POST.get('quantity', 1))
-    if qty > 0:
-        cart[pid] = qty
-    else:
-        cart.pop(pid, None)
-    save_cart(request, cart)
-    return redirect('cart')
 
 
-# ─── Checkout & Orders ────────────────────────────────────────────────────────
+# ─── Checkout ─────────────────────────────────────────────────────────────────
 
 @login_required
 def checkout(request):
@@ -296,15 +316,14 @@ def checkout(request):
     total = 0
     for pid, qty in cart.items():
         try:
-            p = Product.objects.get(pk=pid)
+            p        = Product.objects.get(pk=pid)
             subtotal = p.price * qty
-            total += subtotal
+            total   += subtotal
             items.append({'product': p, 'quantity': qty, 'subtotal': subtotal})
         except Product.DoesNotExist:
             pass
 
     if request.method == 'POST':
-        # Create the order
         state   = request.POST.get('state', 'Kerala')
         country = request.POST.get('country', 'India')
 
@@ -321,40 +340,43 @@ def checkout(request):
             country            = country,
             payment_method     = request.POST.get('payment_method', 'COD'),
             is_paid            = False,
-            estimated_delivery = calculate_delivery_date(country, state),  # ← this line
+            estimated_delivery = calculate_delivery_date(country, state),
         )
-        
-        # Create order items
+
         for item in items:
             OrderItem.objects.create(
-                order=order,
-                product=item['product'],
-                quantity=item['quantity'],
-                price=item['product'].price,
+                order    = order,
+                product  = item['product'],
+                quantity = item['quantity'],
+                price    = item['product'].price,
             )
-        
+
+        # ── COD ──────────────────────────────────────────────
         if order.payment_method == 'COD':
             request.session['cart'] = {}
             request.session.modified = True
-
-            # Send email separately
             try:
-                send_order_confirmation_email(order)
-            except Exception as email_error:
-                print(f'COD email failed: {email_error}')
+                from .email_utils import send_order_confirmation_email
+                try_send_email(send_order_confirmation_email, order)
+            except ImportError:
+                pass
+            messages.success(request, f'Order {order.order_reference()} placed successfully! 🎉')
+            return redirect('order_detail', pk=order.pk)
 
-        messages.success(request, f'Order {order.order_reference()} placed successfully! 🎉')
-        return redirect('order_detail', pk=order.pk)
-        
-        # If Razorpay, return order ID to frontend (handled by JS)
-        # Don't clear cart yet — only after payment succeeds
-        return JsonResponse({'order_id': order.pk, 'total': float(total)})
+        # ── Razorpay — return JSON to frontend ────────────────
+        return JsonResponse({
+            'order_id': order.pk,
+            'total':    float(total),
+        })
 
     return render(request, 'store/checkout.html', {
         'items': items,
         'total': total,
-        'user': request.user,
+        'user':  request.user,
     })
+
+
+# ─── Orders ───────────────────────────────────────────────────────────────────
 
 @login_required
 def order_detail(request, pk):
@@ -372,7 +394,7 @@ def my_orders(request):
 
 @login_required
 def toggle_wishlist(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product      = get_object_or_404(Product, pk=pk)
     obj, created = Wishlist.objects.get_or_create(user=request.user, product=product)
     if not created:
         obj.delete()
@@ -388,7 +410,7 @@ def wishlist_view(request):
     return render(request, 'store/wishlist.html', {'items': items})
 
 
-# ─── Vendor dashboard ─────────────────────────────────────────────────────────
+# ─── Vendor ───────────────────────────────────────────────────────────────────
 
 @login_required
 def vendor_dashboard(request):
@@ -398,41 +420,41 @@ def vendor_dashboard(request):
         return redirect('vendor_register')
 
     products = vendor.products.all()
-    orders = OrderItem.objects.filter(product__vendor=vendor).select_related('order').order_by('-order__created_at')[:20]
+    orders   = OrderItem.objects.filter(
+        product__vendor=vendor
+    ).select_related('order').order_by('-order__created_at')[:20]
 
     return render(request, 'store/vendor_dashboard.html', {
-        'vendor': vendor,
+        'vendor':  vendor,
         'products': products,
-        'orders': orders,
-        'revenue': vendor.total_revenue(),
-        'sales': vendor.total_sales(),
+        'orders':   orders,
+        'revenue':  vendor.total_revenue(),
+        'sales':    vendor.total_sales(),
     })
 
 
 @login_required
 def vendor_register(request):
-    """Modified to fix the district list error"""
     if hasattr(request.user, 'vendor'):
         return redirect('vendor_dashboard')
-    
-    # Define the districts here so they can be passed to the template
+
     districts = [
-        "Thiruvananthapuram", "Kollam", "Pathanamthitta", "Alappuzha", 
-        "Kottayam", "Idukki", "Ernakulam", "Thrissur", "Palakkad", 
+        "Thiruvananthapuram", "Kollam", "Pathanamthitta", "Alappuzha",
+        "Kottayam", "Idukki", "Ernakulam", "Thrissur", "Palakkad",
         "Malappuram", "Kozhikode", "Wayanad", "Kannur", "Kasaragod"
     ]
 
     if request.method == 'POST':
         Vendor.objects.create(
-            user=request.user,
-            shop_name=request.POST['shop_name'],
-            description=request.POST.get('description', ''),
-            location=request.POST['location'],
-            phone=request.POST.get('phone', ''),
+            user        = request.user,
+            shop_name   = request.POST['shop_name'],
+            description = request.POST.get('description', ''),
+            location    = request.POST['location'],
+            phone       = request.POST.get('phone', ''),
         )
         messages.success(request, 'Shop registered! Awaiting admin approval.')
         return redirect('vendor_dashboard')
-        
+
     return render(request, 'store/vendor_register.html', {'districts': districts})
 
 
@@ -449,16 +471,16 @@ def product_add(request):
     categories = Category.objects.all()
     if request.method == 'POST':
         product = Product.objects.create(
-            vendor=vendor,
-            category=Category.objects.get(pk=request.POST['category']),
-            name=request.POST['name'],
-            description=request.POST['description'],
-            price=request.POST['price'],
-            original_price=request.POST.get('original_price') or None,
-            stock=request.POST.get('stock', 0),
-            weight=request.POST.get('weight', ''),
-            origin=request.POST.get('origin', ''),
-            image=request.FILES.get('image'),
+            vendor         = vendor,
+            category       = Category.objects.get(pk=request.POST['category']),
+            name           = request.POST['name'],
+            description    = request.POST['description'],
+            price          = request.POST['price'],
+            original_price = request.POST.get('original_price') or None,
+            stock          = request.POST.get('stock', 0),
+            weight         = request.POST.get('weight', ''),
+            origin         = request.POST.get('origin', ''),
+            image          = request.FILES.get('image'),
         )
         messages.success(request, f'"{product.name}" listed successfully!')
         return redirect('vendor_dashboard')
@@ -467,17 +489,17 @@ def product_add(request):
 
 @login_required
 def product_edit(request, pk):
-    product = get_object_or_404(Product, pk=pk, vendor=request.user.vendor)
+    product    = get_object_or_404(Product, pk=pk, vendor=request.user.vendor)
     categories = Category.objects.all()
     if request.method == 'POST':
-        product.name = request.POST['name']
-        product.description = request.POST['description']
-        product.price = request.POST['price']
+        product.name           = request.POST['name']
+        product.description    = request.POST['description']
+        product.price          = request.POST['price']
         product.original_price = request.POST.get('original_price') or None
-        product.stock = request.POST.get('stock', 0)
-        product.weight = request.POST.get('weight', '')
-        product.origin = request.POST.get('origin', '')
-        product.category = Category.objects.get(pk=request.POST['category'])
+        product.stock          = request.POST.get('stock', 0)
+        product.weight         = request.POST.get('weight', '')
+        product.origin         = request.POST.get('origin', '')
+        product.category       = Category.objects.get(pk=request.POST['category'])
         if request.FILES.get('image'):
             product.image = request.FILES['image']
         product.save()
@@ -485,8 +507,8 @@ def product_edit(request, pk):
         return redirect('vendor_dashboard')
     return render(request, 'store/product_form.html', {
         'categories': categories,
-        'product': product,
-        'action': 'Edit'
+        'product':    product,
+        'action':     'Edit'
     })
 
 
@@ -505,15 +527,16 @@ def update_order_status(request, pk):
     if request.method == 'POST':
         item.order.status = request.POST['status']
         item.order.save()
-
-        # Send email separately
         try:
-            send_status_update_email(item.order)
-        except Exception as email_error:
-            print(f'Status email failed: {email_error}')
-
+            from .email_utils import send_status_update_email
+            try_send_email(send_status_update_email, item.order)
+        except ImportError:
+            pass
         messages.success(request, 'Order status updated.')
     return redirect('vendor_dashboard')
+
+
+# ─── Razorpay ─────────────────────────────────────────────────────────────────
 
 @login_required
 def create_razorpay_order(request):
@@ -569,22 +592,19 @@ def verify_razorpay_payment(request):
                 'razorpay_signature':  data['razorpay_signature'],
             })
 
-            # Payment verified — update order
-            order = Order.objects.get(pk=data['django_order_id'])
+            order         = Order.objects.get(pk=data['django_order_id'])
             order.is_paid = True
             order.status  = 'confirmed'
             order.save()
 
-            # Clear cart
             request.session['cart'] = {}
             request.session.modified = True
 
-            # Send email — isolated so it never breaks payment flow
             try:
                 from .email_utils import send_order_confirmation_email
-                send_order_confirmation_email(order)
-            except Exception as email_error:
-                print(f'Email failed but payment succeeded: {email_error}')
+                try_send_email(send_order_confirmation_email, order)
+            except ImportError:
+                pass
 
             return JsonResponse({
                 'status':   'success',
@@ -617,18 +637,15 @@ def verify_razorpay_payment(request):
 def payment_failed(request):
     messages.error(request, 'Payment was cancelled or failed. Please try again.')
     return redirect('cart')
+
+
+# ─── API ──────────────────────────────────────────────────────────────────────
+
 def test_api(request):
     return JsonResponse({"message": "API working!"})
 
+
 def product_list_api(request):
     products = Product.objects.all()
-
-    data = []
-    for p in products:
-        data.append({
-            "id": p.id,
-            "name": p.name,
-            "price": str(p.price),
-        })
-
+    data = [{"id": p.id, "name": p.name, "price": str(p.price)} for p in products]
     return JsonResponse(data, safe=False)
